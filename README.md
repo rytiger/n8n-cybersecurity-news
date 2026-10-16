@@ -3,13 +3,15 @@ A simple n8n workflow that collects cybersecurity news from different websites a
 
 ## Table of Contents
 
--[How-It-Works](#how-it-works)
--[Priority-Classification](#priority-classification)
--[News-Sources](#news-sources)
--[Telegram-Setup](#telegram-setup)
--[Before-Running](#before-running)
--[Using-the-Workflow-for-Other-Topics](#using-the-Workflow-for-Other-topics)
--[Notes](#notes)
+-[How It Works](#how-it-works)  
+-[Priority Classification](#priority-classification)  
+-[Example Output](#example-output) 
+-[News Sources](#news-sources)  
+-[Telegram Setup](#telegram-setup)  
+-[Before-Running](#before-running)  
+-[Using the Workflow for Other Topics](#using-the-workflow-for-other-topics)  
+-[Notes](#notes)  
+ 
 
 
 
@@ -27,9 +29,12 @@ The workflow uses keywords in article titles to assign one of four priority leve
 ⚪ Low — The default level when none of the configured keywords match.  
 This classification is based on keywords, not AI analysis. It may not always reflect the actual severity or context of an article.  
 
+## Example Output
+<img width="400"  alt="example" src="https://github.com/user-attachments/assets/47b6a52e-3ca2-4979-9b82-8075fdf9697f" />
+
 
 ## News Sources
-The repository includes RS Sources.csv, which contains the news sources and their URLs.  
+The repository includes rss_sources.csv, which contains the news sources and their URLs.  
 You can edit the CSV file to add or remove websites. The sources don’t have to be cybersecurity-related; you can use the workflow for other topics too.  
 After updating the CSV file, make sure the records in your n8n Data Table are updated as well. The Get Row(s) node uses this data to retrieve the sources.  
 
@@ -145,7 +150,7 @@ return {
 ## Notes  
 The workflow is intended to be customised.  
 You can change the source websites, date filter and JavaScript code to suit your needs.  
-Keep your bot token and other secrets private. Don’t upload them to GitHub.  
+
 
 ## Author  
 rytiger
