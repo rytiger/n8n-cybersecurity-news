@@ -1,0 +1,20 @@
+﻿name,url,added_at,category
+The Hacker News,https://feeds.feedburner.com/TheHackersNews,2026-08-07T21:00:00.000Z,#Cybersecurity
+BleepingComputer,https://www.bleepingcomputer.com/feed/,2026-08-06T22:00:00.000Z,#Cybersecurity
+KrebsOnSecurity,https://krebsonsecurity.com/feed/,2026-08-06T22:00:00.000Z,#Cybersecurity
+Dark Reading,https://www.darkreading.com/rss.xml,2026-08-07T18:11:11.000Z,#Cybersecurity
+Google Project Zero,https://googleprojectzero.blogspot.com/feeds/posts/default,2026-08-07T18:11:13.000Z,#Cybersecurity
+PortSwigger,https://portswigger.net/blog/rss,2026-08-07T18:11:15.000Z,#Cybersecurity
+SANS Institute,https://www.sans.org/blog/rss/,2026-08-07T18:11:18.000Z,#Cybersecurity
+Phoronix,https://www.phoronix.com/rss.php,2026-08-07T18:11:20.000Z,#Linux_and_open_source
+Linux Foundation,https://www.linuxfoundation.org/blog/rss.xml,2026-08-07T18:11:23.000Z,#Linux_and_open_source
+The Register,https://www.theregister.com/headlines.atom,2026-08-07T18:11:25.000Z,#Tech
+National Cyber Security Centre (NCSC),https://www.ncsc.gov.uk/api/1/services/v1/all-rss-feed.xml,2026-08-07T18:11:28.000Z,#Cybersecurity
+MIT Technology Review AI,https://www.technologyreview.com/feed/topic/artificial-intelligence/,2026-08-07T18:11:31.000Z,#AI
+Google DeepMind Blog,https://deepmind.google/blog/rss.xml,2026-08-07T18:11:34.000Z,#AI
+Self Hosted Show,https://selfhosted.show/rss,2026-08-07T18:25:28.000Z,#Homelab_and_ selfhosting
+Google Online Security Blog,https://security.googleblog.com/feeds/posts/default,2026-08-07T18:25:30.000Z,#Learning_and_research
+It's FOSS,https://itsfoss.com/feed/,2026-08-07T18:25:33.000Z,#Linux_and_open_source
+Linux Today,https://www.linuxtoday.com/feed/,2026-08-07T18:25:36.000Z,#Linux_and_open_source
+OMG! Ubuntu,https://www.omgubuntu.co.uk/feed,2026-08-07T18:25:38.000Z,#Linux_and_open_source
+Ars Technica - All content,https://feeds.arstechnica.com/arstechnica/index,2026-08-07T18:25:41.000Z,#Tech
