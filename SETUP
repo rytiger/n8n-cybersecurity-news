@@ -33,3 +33,59 @@ Open the Telegram node and create a Telegram API credential.
 Enter your bot token and save it.
 Set the Telegram chat ID to your channel’s chat ID.
 Test the workflow and confirm that a message arrives in your channel.
+
+5. Customising the Workflow
+
+Using the workflow for other topics
+
+By default, the workflow assigns priority labels to cybersecurity news based on keywords in the article title. This classification is keyword-based and may not always reflect the actual severity of an article.
+
+If you want to use the workflow for general news or other topics without cybersecurity priority labels:
+
+Open the workflow in n8n.
+Find the Code in JavaScript node.
+Replace its JavaScript code with the alternative code below.
+Save the workflow and test it.
+
+
+### Alternative JavaScript Code
+
+Use this code if you want to remove the cybersecurity priority labels and send general news instead.
+
+const title = $json.title;
+const link = $json.link;
+const content = $json.content;
+const website_tag = $json.website_tag;
+
+const date = new Date($json.date).toLocaleString("en-GB", {
+  day: "2-digit",
+  month: "short",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit"
+});
+
+const shortContent =
+  content.length > 450
+    ? content.substring(0, 450) + "..."
+    : content;
+
+const message = `
+📌 ${title}
+
+${date}
+${website_tag}
+
+📄 Description:
+${shortContent}
+
+🔗 Read more:
+${link}
+`;
+
+return {
+  json: {
+    message
+  }
+};
+
