@@ -1,0 +1,1830 @@
+{
+  "name": "News workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "chatId": "-1004348263086",
+        "text": "={{$json.message}}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1152,
+        -16
+      ],
+      "id": "b6874605-5258-46c0-b682-01e55644db1e",
+      "name": "Send a text message",
+      "webhookId": "1f28d0a8-593d-4d0b-8eaf-203f9250f1e7",
+      "credentials": {
+        "telegramApi": {
+          "id": "rPlrTQhyYSxHx9dn",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        96,
+        -16
+      ],
+      "id": "894f7280-27bb-4597-8a75-5ceb251dc309",
+      "name": "RSS Read"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0c2a35ae-7463-4d57-a882-bbd7cdd9cca6",
+              "name": "title",
+              "value": "={{ $('RSS Read').item.json.title }}",
+              "type": "string"
+            },
+            {
+              "id": "e9b8f328-cc72-4fe6-939e-7eeda8b8fa00",
+              "name": "link",
+              "value": "={{ $('RSS Read').item.json.link }}",
+              "type": "string"
+            },
+            {
+              "id": "22ccc672-0911-40fc-8c7d-bd7c3f2399f0",
+              "name": "date",
+              "value": "={{ $('RSS Read').item.json.pubDate }}",
+              "type": "string"
+            },
+            {
+              "id": "4543e695-0435-4005-805f-6f8615586366",
+              "name": "content",
+              "value": "={{ $('RSS Read').item.json.content }}",
+              "type": "string"
+            },
+            {
+              "id": "97224af5-b7fd-4cf5-9d24-9b1c852e46e8",
+              "name": "website_tag",
+              "value": "={{ $('Get row(s)').item.json.website_tag }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        544,
+        -16
+      ],
+      "id": "abb8dc23-ac9d-421c-b4da-52d76d922595",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const title = $json.title;\nconst link = $json.link;\nconst content = $json.content;\nconst website_tag =$json.website_tag\n\nconst date = new Date($json.date).toLocaleString(\"en-GB\", {\n  day: \"2-digit\",\n  month: \"short\",\n  year: \"numeric\",\n  hour: \"2-digit\",\n  minute: \"2-digit\"\n});\n\nlet priority = \"⚪ Low\";\n\nconst text = title.toLowerCase();\n\nif (\n  text.includes(\"zero-day\") ||\n  text.includes(\"ransomware\") ||\n  text.includes(\"active exploit\") ||\n  text.includes(\"critical\") ||\n  text.includes(\"rce\")\n) {\n  priority = \"🔴 Critical\";\n}\nelse if (\n  text.includes(\"cve\") ||\n  text.includes(\"vulnerability\") ||\n  text.includes(\"patch\") ||\n  text.includes(\"exploit\")\n) {\n  priority = \"🟠 High\";\n}\nelse if (\n  text.includes(\"security\") ||\n  text.includes(\"research\")\n) {\n  priority = \"🟡 Medium\";\n}\n\nconst shortContent =\n  content.length > 450\n    ? content.substring(0, 450) + \"...\"\n    : content;\n\nconst message = `\n\n${priority }\n\n📌 ${title}\n\n${date}\n${website_tag}\n\n📄 Description:\n${shortContent}\n\n🔗 Read more:\n${link}\n`;\n\nreturn {\n  json: {\n    message\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        736,
+        -16
+      ],
+      "id": "b9329718-f537-4010-8425-7358783749b6",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -176,
+        -32
+      ],
+      "id": "816b4269-f4b4-4a46-9d20-15a5cd33aa73",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "IxdUj3dt0UogUnxf",
+          "mode": "list",
+          "cachedResultName": "rss_sources",
+          "cachedResultUrl": "/projects/6uXtyIrgtdOepseh/datatables/IxdUj3dt0UogUnxf"
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -400,
+        -32
+      ],
+      "id": "550e4371-db15-4b71-9ecc-4951114a6678",
+      "name": "Get row(s)"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "b2458c02-1816-4383-a2e1-c1bdf1f2068a",
+              "leftValue": "={{ $json.pubDate }}",
+              "rightValue": "2026-10-15T17:00:00",
+              "operator": {
+                "type": "dateTime",
+                "operation": "after"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        320,
+        -16
+      ],
+      "id": "04f03367-d2d4-4295-950b-19e47266f33d",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "url": "https://euvdservices.enisa.europa.eu/api/search?fromScore=0&toScore=10&size=100&page=0",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -384,
+        -240
+      ],
+      "id": "414ca2c9-264b-48aa-b124-aab8a3306ab1",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "79600646-e6cf-499a-adc5-6702fb6cae74",
+              "leftValue": "={{ $json.score }}",
+              "rightValue": 7,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        64,
+        -240
+      ],
+      "id": "aea626d5-a61f-442d-991a-527a7b54104b",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "mZIyBv05uXK0Dk7N",
+          "mode": "list",
+          "cachedResultName": "CVE Tracker",
+          "cachedResultUrl": "/projects/6uXtyIrgtdOepseh/datatables/mZIyBv05uXK0Dk7N"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "score": "={{ $json.score }}",
+            "cve_id": "={{ $json.cve_id }}",
+            "severity": "={{ $json.severity }}",
+            "description": "={{ $json.description }}",
+            "date": "={{ $json.datePublished }}",
+            "url": "={{ $json.references }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "cve_id",
+              "displayName": "cve_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "severity",
+              "displayName": "severity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "score",
+              "displayName": "score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "description",
+              "displayName": "description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "url",
+              "displayName": "url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "date",
+              "displayName": "date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        368,
+        -272
+      ],
+      "id": "fc822e2d-9be0-48ba-b516-c609bc738a7a",
+      "name": "Insert row"
+    },
+    {
+      "parameters": {
+        "html": "<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"UTF-8\">\n\n  <style>\n    body {\n      font-family: Arial, sans-serif;\n      margin: 30px;\n      color: #222;\n    }\n\n    h1 {\n      margin-bottom: 5px;\n    }\n\n    .date {\n      color: #666;\n      margin-bottom: 8px;\n    }\n\n    .total {\n      color: #333;\n      font-weight: bold;\n      margin-bottom: 20px;\n    }\n\n    table {\n      width: 100%;\n      border-collapse: collapse;\n      font-size: 10px;\n    }\n\n    th, td {\n      border: 1px solid #ccc;\n      padding: 6px;\n      text-align: left;\n      vertical-align: top;\n    }\n\n    th {\n      background: #eeeeee;\n    }\n\n    .description {\n      max-width: 400px;\n      overflow-wrap: anywhere;\n      word-break: break-word;\n    }\n\n    .reference {\n      max-width: 180px;\n      overflow-wrap: anywhere;\n      word-break: break-word;\n    }\n    \n    .date-column {\n      width: 85px;\n      min-width: 85px;\n      white-space: normal;\n    }\n\n    .cve-column {\n      width: 90px;\n      min-width: 90px;\n      max-width: 90px;\n      overflow-wrap: anywhere;\n      word-break: break-word;\n    }\n    \n    \n  </style>\n</head>\n\n<body>\n\n  <h1>Weekly Vulnerability Report</h1>\n\n  <div class=\"date\">\n    Generated: {{ $json.report_date }} at {{ $json.report_time }}\n  </div>\n\n  <div class=\"total\">\n    Total Vulnerabilities: {{ $json.total_vulnerabilities }}\n  </div>\n\n  <table>\n\n    <thead>\n      <tr>\n        <th class=\"cve-column\">CVE ID</th>\n        <th>Severity</th>\n        <th>Score</th>\n        <th class=\"description\">Description</th>\n        <th class=\"reference\">Reference</th>\n        <th class=\"date-column\">Date</th>\n      </tr>\n    </thead>\n\n    <tbody>\n\n      {{ $json.vulnerabilities.map(v => `\n        <tr>\n          <td>${v.cve_id ?? ''}</td>\n          <td>${v.severity ?? ''}</td>\n          <td>${v.score ?? ''}</td>\n          <td class=\"description\">${v.description ?? ''}</td>\n          <td class=\"reference\">\n  ${v.url\n    ? v.url\n        .split(/(?=https:\\/\\/)/)\n        .map(url => `<a href=\"${url}\" target=\"_blank\">${url}</a>`)\n        .join('<br><br>')\n    : ''}\n</td>\n          <td class=\"date-column\">\n  ${v.date ? new Date(v.date).toLocaleDateString('en-GB') : ''}\n</td>\n        </tr>\n      `).join('') }}\n\n    </tbody>\n\n  </table>\n\n</body>\n</html>"
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        272,
+        -560
+      ],
+      "id": "7edb5fe5-1001-4a8e-b3fe-63fc960ec407",
+      "name": "HTML"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nconst vulnerabilities = items.map(item => item.json);\n\nconst reportDate = new Date();\n\nconst formattedDate = reportDate.toLocaleDateString('en-GB', {\n  day: 'numeric',\n  month: 'long',\n  year: 'numeric',\n  timeZone: 'Europe/London'\n});\n\nconst formattedTime = reportDate.toLocaleTimeString('en-GB', {\n  hour: '2-digit',\n  minute: '2-digit',\n  timeZone: 'Europe/London'\n});\n\nreturn [\n  {\n    json: {\n      report_date: formattedDate,\n      report_time: formattedTime,\n      total_vulnerabilities: vulnerabilities.length,\n      vulnerabilities\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        48,
+        -560
+      ],
+      "id": "22c994ec-ab0f-4936-ad3e-bb0301f9b11f",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "amount": 20
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        960,
+        -16
+      ],
+      "id": "24ab0265-f372-428c-bb26-9d940721e370",
+      "name": "Wait1",
+      "webhookId": "16792e3b-5349-45cf-be22-7bfee6e7bcc8"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1344,
+        -16
+      ],
+      "id": "ee8dc968-b8fd-4ab3-a49f-243b97ff6fbc",
+      "name": "Wait2",
+      "webhookId": "47fb0f48-7a84-46e8-ad14-a75fc9797450"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://pdf:3000/pdf",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "text/html"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "text/html",
+        "body": "={{ $json.html }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        496,
+        -560
+      ],
+      "id": "53c6446e-b33b-4776-936a-90df5760ef58",
+      "name": "HTTP Request2"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "mZIyBv05uXK0Dk7N",
+          "mode": "list",
+          "cachedResultName": "CVE Tracker",
+          "cachedResultUrl": "/projects/6uXtyIrgtdOepseh/datatables/mZIyBv05uXK0Dk7N"
+        },
+        "filters": {
+          "conditions": []
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -400,
+        -560
+      ],
+      "id": "1a3f03d4-1c0e-452e-a68e-792a9ecd1fc3",
+      "name": "Get row(s)2",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\n\nreturn data.items.map(vulnerability => {\n  const score = Number(vulnerability.baseScore);\n\n  let severity;\n\n  if (score >= 9) {\n    severity = 'CRITICAL';\n  } else if (score >= 7) {\n    severity = 'HIGH';\n  } else if (score >= 4) {\n    severity = 'MEDIUM';\n  } else {\n    severity = 'LOW';\n  }\n\n  return {\n    json: {\n      euvd_id: vulnerability.id,\n      cve_id: vulnerability.aliases || '',\n      severity,\n      score,\n      description: vulnerability.description,\n      datePublished: vulnerability.datePublished,\n      dateUpdated: vulnerability.dateUpdated,\n      references: vulnerability.references || '',\n      vendor: vulnerability.enisaIdVendor?.[0]?.vendor?.name || '',\n      epss: vulnerability.epss\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -160,
+        -240
+      ],
+      "id": "bab5efc6-f83c-4d5d-ad37-83ea7af02224",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "operation": "sendDocument",
+        "chatId": "-1004348263086",
+        "binaryData": true,
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        720,
+        -560
+      ],
+      "id": "97d17006-b34c-489f-ba69-29374f161fe5",
+      "name": "Send a document",
+      "webhookId": "cb5f8008-abc7-4ebf-a8b0-bb62d4f07856",
+      "credentials": {
+        "telegramApi": {
+          "id": "rPlrTQhyYSxHx9dn",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6dda279c-e5a5-4ac5-988d-aa40fddcf1df",
+              "leftValue": "={{ $json.date }}",
+              "rightValue": "={{ $now.minus({ days: 7 }) }}",
+              "operator": {
+                "type": "dateTime",
+                "operation": "after"
+              }
+            },
+            {
+              "id": "8d8c79be-83e3-4258-b8f2-9a04cec49f8f",
+              "leftValue": "={{ $json.date }}",
+              "rightValue": "={{ $now }}",
+              "operator": {
+                "type": "dateTime",
+                "operation": "before"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        -192,
+        -560
+      ],
+      "id": "6bc36c7c-cd51-4aec-a026-d2cd9bdd1f4b",
+      "name": "Filter2"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                4
+              ],
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -704,
+        -1152
+      ],
+      "id": "15f11cbd-1771-4695-a9c3-0f5655dda232",
+      "name": "Schedule Trigger3"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 10 * * FRI"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -656,
+        -560
+      ],
+      "id": "c69df8e3-17d1-4d89-9990-f1929ff64865",
+      "name": "Schedule Trigger2 (weekly vulnerability report)"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 4
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -608,
+        -32
+      ],
+      "id": "59edfc2d-c464-4fff-b039-72ffb4087145",
+      "name": "Schedule Trigger (cybersecurity news)"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.rss }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        -272,
+        -1152
+      ],
+      "id": "c1e62066-f19b-486b-aee3-8396e02d0f97",
+      "name": "RSS Read2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nreturn items.map(item => {\n  const j = item.json;\n\n  return {\n    json: {\n      title: j.title ?? '',\n      description: j.contentSnippet ?? j.content ?? j.description ?? '',\n      url: j.link ?? j.url ?? '',\n      published_at: j.isoDate ?? j.pubDate ?? j.published ?? '',\n      source: j.creator ?? j.author ?? j.source ?? '',\n      source_category: j.category ?? '',\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -16,
+        -1152
+      ],
+      "id": "fb6f0cd3-8d9a-416e-ae21-83bdd1fcb542",
+      "name": "Normalize News"
+    },
+    {
+      "parameters": {
+        "compare": "selectedFields",
+        "fieldsToCompare": "url",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        176,
+        -1152
+      ],
+      "id": "5fdbdb8b-532a-4ecc-8452-f885400bcae1",
+      "name": "Remove Duplicates"
+    },
+    {
+      "parameters": {
+        "jsCode": "const sources = [\n  // AI & Machine Learning\n  {\n    name: 'Google DeepMind',\n    category: 'AI & ML',\n    rss: 'https://deepmind.google/blog/rss.xml'\n  },\n  {\n    name: 'OpenAI',\n    category: 'AI & ML',\n    rss: 'https://openai.com/news/rss.xml'\n  },\n  {\n    name: 'Hugging Face',\n    category: 'AI & ML',\n    rss: 'https://huggingface.co/blog/feed.xml'\n  },\n\n  // General Technology\n  {\n    name: 'Ars Technica',\n    category: 'Technology',\n    rss: 'https://feeds.arstechnica.com/arstechnica/index'\n  },\n  {\n    name: 'TechCrunch',\n    category: 'Technology',\n    rss: 'https://techcrunch.com/feed/'\n  },\n  {\n    name: 'The Register',\n    category: 'Technology',\n    rss: 'https://www.theregister.com/headlines.atom'\n  },\n\n  // Cybersecurity\n  {\n    name: 'The Hacker News',\n    category: 'Cybersecurity',\n    rss: 'https://feeds.feedburner.com/TheHackersNews'\n  },\n  {\n    name: 'BleepingComputer',\n    category: 'Cybersecurity',\n    rss: 'https://www.bleepingcomputer.com/feed/'\n  },\n  {\n    name: 'KrebsOnSecurity',\n    category: 'Cybersecurity',\n    rss: 'https://krebsonsecurity.com/feed/'\n  },\n\n  // Linux & Open Source\n  {\n    name: 'OMG! Ubuntu',\n    category: 'Linux & Operating Systems',\n    rss: 'https://www.omgubuntu.co.uk/feed'\n  },\n  {\n    name: 'Linux Foundation',\n    category: 'Linux & Open Source',\n    rss: 'https://www.linuxfoundation.org/blog/rss.xml'\n  },\n  {\n    name: 'LWN',\n    category: 'Linux & Operating Systems',\n    rss: 'https://lwn.net/headlines/rss'\n  },\n\n  // Research & Emerging Technology\n  {\n    name: 'IEEE Spectrum',\n    category: 'Research & Emerging Technology',\n    rss: 'https://spectrum.ieee.org/feeds/feed.rss'\n  },\n  {\n    name: 'MIT Technology Review',\n    category: 'Research & Emerging Technology',\n    rss: 'https://www.technologyreview.com/feed/'\n  },\n\n  // Web / Programming\n  {\n    name: 'MDN Web Docs',\n    category: 'Web Development',\n    rss: 'https://developer.mozilla.org/en-US/blog/rss.xml'\n  }\n];\n\nreturn sources.map(source => ({\n  json: source\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -448,
+        -1152
+      ],
+      "id": "7d1028ad-1539-45cd-bd5e-8054c1471417",
+      "name": "RSS Sources"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nconst news = items.map((item, index) => ({\n  id: index + 1,\n  title: item.json.title ?? '',\n  description: item.json.description ?? '',\n  url: item.json.url ?? '',\n  published_at: item.json.published_at ?? '',\n  source: item.json.source ?? ''\n}));\n\nreturn [\n  {\n    json: {\n      total_articles: news.length,\n      news\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        368,
+        -1152
+      ],
+      "id": "9f2c3c2f-22ea-463e-9542-92938e968788",
+      "name": "Prepare AI Input"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"report_summary\": {\n    \"total_articles\": 0,\n    \"top_topics\": [],\n    \"major_trends\": [],\n    \"important_developments\": []\n  },\n  \"top_5\": [\n    {\n      \"rank\": 1,\n      \"title\": \"\",\n      \"topic\": \"\",\n      \"importance_score\": 0,\n      \"impact_level\": \"\",\n      \"country_or_region\": \"\",\n      \"who_is_affected\": \"\",\n      \"why_it_matters\": \"\",\n      \"summary\": \"\",\n      \"key_takeaway\": \"\",\n      \"source\": \"\",\n      \"url\": \"\"\n    }\n  ],\n  \"articles\": [\n    {\n      \"title\": \"\",\n      \"topic\": \"\",\n      \"importance_score\": 0,\n      \"impact_level\": \"\",\n      \"country_or_region\": \"\",\n      \"who_is_affected\": \"\",\n      \"why_it_matters\": \"\",\n      \"summary\": \"\",\n      \"key_takeaway\": \"\",\n      \"source\": \"\",\n      \"url\": \"\"\n    }\n  ]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1328,
+        -912
+      ],
+      "id": "0f99cfc6-0180-4b7f-b6df-cdb7557294d5",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-flash-lite-latest",
+        "options": {
+          "maxOutputTokens": null
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        368,
+        -960
+      ],
+      "id": "13009eb6-a203-42dc-881b-97f8a6bbfce1",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "grcCu5q24WjCAIKn",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\n\nconst aiText =\n  input.output ??\n  input.text ??\n  input.response ??\n  input.content ??\n  input.message?.content ??\n  '';\n\nif (!aiText) {\n  throw new Error(\n    'AI Agent output text was not found. Check the AI Agent output field name.'\n  );\n}\n\nreturn [\n  {\n    json: {\n      ai_report: aiText\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1152,
+        -1152
+      ],
+      "id": "657386f5-d6cf-430c-bc42-34da0e7a7cb6",
+      "name": "Normalize News AI Report"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nreturn items.map(item => {\n  const input = item.json;\n\n  let report;\n\n  // Case 1: AI already returned a parsed JSON object\n  if (\n    input.ai_report &&\n    typeof input.ai_report === 'object' &&\n    !Array.isArray(input.ai_report)\n  ) {\n    report = input.ai_report;\n  } else {\n    const raw =\n      input.ai_report ??\n      input.output ??\n      input.text ??\n      input.response ??\n      input.content ??\n      '';\n\n    let cleaned = String(raw)\n      .replace(/```json/gi, '')\n      .replace(/```/g, '')\n      .trim();\n\n    // Find the first JSON object in the AI response\n    const firstBrace = cleaned.indexOf('{');\n\n    if (firstBrace === -1) {\n      throw new Error(\n        'AI did not return a JSON object. Response starts with: ' +\n        cleaned.substring(0, 200)\n      );\n    }\n\n    cleaned = cleaned.substring(firstBrace);\n\n    // Try to find the matching closing brace\n    let depth = 0;\n    let inString = false;\n    let escaped = false;\n    let endIndex = -1;\n\n    for (let i = 0; i < cleaned.length; i++) {\n      const char = cleaned[i];\n\n      if (escaped) {\n        escaped = false;\n        continue;\n      }\n\n      if (char === '\\\\' && inString) {\n        escaped = true;\n        continue;\n      }\n\n      if (char === '\"') {\n        inString = !inString;\n        continue;\n      }\n\n      if (!inString) {\n        if (char === '{') {\n          depth++;\n        } else if (char === '}') {\n          depth--;\n\n          if (depth === 0) {\n            endIndex = i + 1;\n            break;\n          }\n        }\n      }\n    }\n\n    if (endIndex === -1) {\n      throw new Error(\n        'AI response contains an opening { but no complete JSON object.'\n      );\n    }\n\n    cleaned = cleaned.substring(0, endIndex);\n\n    try {\n      report = JSON.parse(cleaned);\n    } catch (error) {\n      throw new Error(\n        'Failed to parse AI report JSON: ' +\n        error.message +\n        '\\n\\nAI response begins with:\\n' +\n        cleaned.substring(0, 500)\n      );\n    }\n  }\n\n  return {\n    json: report\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1344,
+        -1152
+      ],
+      "id": "6ec7c467-7518-45f6-8eac-77fadc819bf7",
+      "name": "Parse AI Report JSON"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\n\nconst topics = input.report_summary?.top_topics ?? [];\nconst articles = input.articles ?? input.stories ?? input.news ?? [];\n\nconst topicCounts = {};\n\nfor (const topic of topics) {\n  topicCounts[topic] = 0;\n}\n\nfor (const article of articles) {\n  const topic =\n    article.topic ??\n    article.category ??\n    article.field ??\n    '';\n\n  if (topic) {\n    topicCounts[topic] = (topicCounts[topic] ?? 0) + 1;\n  }\n}\n\nconst topicAnalysis = Object.entries(topicCounts)\n  .map(([topic, count]) => ({\n    topic,\n    count\n  }))\n  .sort((a, b) => b.count - a.count);\n\nreturn [\n  {\n    json: {\n      ...input,\n      topic_analysis: topicAnalysis\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2144,
+        -1344
+      ],
+      "id": "846e78c9-5cb7-4a0e-b659-c1b7f130c603",
+      "name": "Build Topic Analysis"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\n\n// Prepare clean topic data for the report chart\nconst topics = Array.isArray(data.topic_analysis)\n  ? data.topic_analysis\n      .filter(item => Number(item.count) > 0)\n      .sort((a, b) => Number(b.count) - Number(a.count))\n  : [];\n\n// Build chart-ready data\nconst labels = topics.map(item => item.topic);\nconst values = topics.map(item => Number(item.count));\n\nreturn [\n  {\n    json: {\n      topic_analysis: topics,\n      topic_chart: {\n        labels,\n        values\n      }\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2304,
+        -1344
+      ],
+      "id": "0161102a-96e6-4ae6-9f9f-6b3af2e23b86",
+      "name": "Prepare Chart Data"
+    },
+    {
+      "parameters": {
+        "labelsMode": "array",
+        "labelsArray": "={{ $items().map(item => item.json.topic) }}",
+        "data": "={{ $items().map(item => item.json.count) }}",
+        "chartOptions": {
+          "backgroundColor": "#FFFFFF",
+          "devicePixelRatio": 2,
+          "format": "png",
+          "height": 700,
+          "width": 1200
+        },
+        "datasetOptions": {}
+      },
+      "type": "n8n-nodes-base.quickChart",
+      "typeVersion": 1,
+      "position": [
+        2464,
+        -1360
+      ],
+      "id": "1debd835-38fa-430b-9a78-f0860c3205fb",
+      "name": "Topic Distribution Chart"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\n\nconst top5 = input.top_5 ?? [];\n\nreturn [\n  {\n    json: {\n      top_5_stories: top5.slice(0, 5)\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2160,
+        -1168
+      ],
+      "id": "0d5dd3dd-eed5-4de2-b3a0-1208942e1369",
+      "name": "Prepare Top 5 Stories"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\n\nconst articles = input.articles ?? [];\n\nreturn [\n  {\n    json: {\n      articles: articles.map((article, index) => ({\n        number: index + 1,\n        title: article.title ?? '',\n        topic: article.topic ?? '',\n        summary: article.summary ?? '',\n        why_it_matters: article.why_it_matters ?? '',\n        who_is_affected: article.who_is_affected ?? '',\n        country: article.country ?? '',\n        source: article.source ?? '',\n        url: article.url ?? ''\n      }))\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2160,
+        -1024
+      ],
+      "id": "d6b6a560-167a-4ab7-9130-0c191bd2f82c",
+      "name": "Prepare Articles"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nlet reportSummary = {};\nlet top5 = [];\nlet articles = [];\nlet recommendations = {};\nlet majorTrends = [];\nlet importantDevelopments = [];\nlet topicAnalysis = [];\nlet chart = null;\n\n// Collect data from all incoming branches\nfor (const item of items) {\n  const data = item.json;\n\n  if (data.report_summary) {\n    reportSummary = {\n      ...reportSummary,\n      ...data.report_summary\n    };\n  }\n\n  if (Array.isArray(data.top_5)) {\n    top5 = data.top_5;\n  }\n\n  if (Array.isArray(data.top_5_stories)) {\n    top5 = data.top_5_stories;\n  }\n\n  if (Array.isArray(data.articles)) {\n    articles = data.articles;\n  }\n\n  if (data.recommendations) {\n    recommendations = data.recommendations;\n  }\n\n  if (Array.isArray(data.major_trends)) {\n    majorTrends = data.major_trends;\n  }\n\n  if (Array.isArray(data.important_developments)) {\n    importantDevelopments = data.important_developments;\n  }\n\n  if (Array.isArray(data.topic_analysis)) {\n    topicAnalysis = data.topic_analysis;\n  }\n\n  if (data.topic_chart) {\n    chart = data.topic_chart;\n  }\n}\n\n// Build article count if the AI did not provide it\nif (\n  !reportSummary.total_articles ||\n  Number(reportSummary.total_articles) === 0\n) {\n  reportSummary.total_articles = articles.length;\n}\n\n// Build topic analysis from AI topic counts when needed\nif (\n  topicAnalysis.length === 0 &&\n  reportSummary.topic_counts &&\n  typeof reportSummary.topic_counts === 'object'\n) {\n  topicAnalysis = Object.entries(\n    reportSummary.topic_counts\n  )\n    .filter(([topic, count]) => Number(count) > 0)\n    .map(([topic, count]) => ({\n      topic,\n      count: Number(count)\n    }))\n    .sort((a, b) => b.count - a.count);\n}\n\n// Build chart data when the AI did not provide a chart\nif (!chart && topicAnalysis.length > 0) {\n  chart = {\n    labels: topicAnalysis.map(item => item.topic),\n    values: topicAnalysis.map(item => item.count)\n  };\n}\n\n// Add topic percentages for the PDF charts\nif (topicAnalysis.length > 0) {\n  const totalTopicArticles = topicAnalysis.reduce(\n    (total, item) => total + Number(item.count || 0),\n    0\n  );\n\n  topicAnalysis = topicAnalysis.map(item => ({\n    ...item,\n    percentage:\n      totalTopicArticles > 0\n        ? Number(\n            (\n              (Number(item.count) / totalTopicArticles) * 100\n            ).toFixed(1)\n          )\n        : 0\n  }));\n\n  chart = {\n    labels: topicAnalysis.map(item => item.topic),\n    values: topicAnalysis.map(item => Number(item.count)),\n    percentages: topicAnalysis.map(item => Number(item.percentage))\n  };\n}\n\nreturn [\n  {\n    json: {\n      report_summary: reportSummary,\n      top_5: top5,\n      recommendations: recommendations,\n      major_trends: majorTrends,\n      important_developments: importantDevelopments,\n      topic_analysis: topicAnalysis,\n      chart: chart,\n      articles: articles,\n      generated_at: new Date().toISOString()\n    }\n  }\n];\n```\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2784,
+        -1200
+      ],
+      "id": "ab0339be-d48a-4ecb-9d06-ac1d8c737972",
+      "name": "Build Report Data"
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2640,
+        -1216
+      ],
+      "id": "4184486a-3dfb-4bb2-97aa-4b4502999acd",
+      "name": "Merge Report Sections"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\n\nconst summary = data.report_summary ?? {};\nconst top5 = data.top_5 ?? [];\nconst articles = data.articles ?? [];\nconst topics = data.topic_analysis ?? [];\nconst chart = data.chart ?? {};\nconst recommendations = data.recommendations ?? {};\nconst majorTrends = data.major_trends ?? [];\nconst importantDevelopments = data.important_developments ?? [];\n\nconst esc = (value) =>\n  String(value ?? '')\n    .replace(/&/g, '&amp;')\n    .replace(/</g, '&lt;')\n    .replace(/>/g, '&gt;')\n    .replace(/\"/g, '&quot;');\n\nconst top5Html = top5.map((story, index) => `\n  <div class=\"story\">\n    <div class=\"rank\">${index + 1}</div>\n    <div>\n      <h3>${esc(story.title)}</h3>\n      <div class=\"meta\">\n        ${esc(story.topic || '')}\n        ${story.impact_level ? ` • ${esc(story.impact_level)}` : ''}\n        ${story.importance_score ? ` • ${esc(story.importance_score)}/10` : ''}\n      </div>\n      <p>${esc(story.summary)}</p>\n      ${\n        story.url\n          ? `<a href=\"${esc(story.url)}\">${esc(story.source || 'Read source')} →</a>`\n          : ''\n      }\n    </div>\n  </div>\n`).join('');\n\nconst articlesHtml = articles.map((article, index) => `\n  <article class=\"article\">\n    <h2>${index + 1}. ${esc(article.title)}</h2>\n\n    <div class=\"meta\">\n      ${esc(article.topic || '')}\n      ${article.country_or_region ? ` • ${esc(article.country_or_region)}` : ''}\n      ${article.source ? ` • ${esc(article.source)}` : ''}\n      ${article.impact_level ? ` • ${esc(article.impact_level)}` : ''}\n    </div>\n\n    <h3>Summary</h3>\n    <p>${esc(article.summary)}</p>\n\n    <h3>Why it matters</h3>\n    <p>${esc(article.why_it_matters)}</p>\n\n    <h3>Who is affected</h3>\n    <p>${esc(article.who_is_affected)}</p>\n\n    <h3>Key takeaway</h3>\n    <p>${esc(article.key_takeaway)}</p>\n\n    ${\n      article.url\n        ? `<p><a href=\"${esc(article.url)}\">Read the full story →</a></p>`\n        : ''\n    }\n  </article>\n`).join('');\n\nconst topicRows = topics.map(topic => `\n  <tr>\n    <td>${esc(topic.topic)}</td>\n    <td>${esc(topic.count)}</td>\n    <td>${esc(topic.percentage)}%</td>\n  </tr>\n`).join('');\n\n// Create a simple CSS pie chart from topic percentages\nconst pieSegments = [];\nlet currentAngle = 0;\n\nconst chartValues = Array.isArray(chart.values)\n  ? chart.values\n  : topics.map(item => Number(item.count || 0));\n\nconst chartLabels = Array.isArray(chart.labels)\n  ? chart.labels\n  : topics.map(item => item.topic);\n\nconst totalChartValue = chartValues.reduce(\n  (sum, value) => sum + Number(value || 0),\n  0\n);\n\nif (totalChartValue > 0) {\n  chartValues.forEach((value, index) => {\n    const percentage = (Number(value) / totalChartValue) * 100;\n    const start = currentAngle;\n    const end = currentAngle + (percentage * 3.6);\n\n    pieSegments.push({\n      label: chartLabels[index] || '',\n      percentage,\n      start,\n      end\n    });\n\n    currentAngle = end;\n  });\n}\n\nconst pieGradient = pieSegments.length\n  ? `conic-gradient(\n      ${pieSegments\n        .map((segment, index) => {\n          const colors = [\n            '#2563eb',\n            '#7c3aed',\n            '#059669',\n            '#d97706',\n            '#dc2626',\n            '#0891b2',\n            '#db2777',\n            '#65a30d',\n            '#9333ea'\n          ];\n\n          return `${colors[index % colors.length]} ${segment.start}deg ${segment.end}deg`;\n        })\n        .join(', ')}\n    )`\n  : '#e5e7eb';\n\nconst pieLegend = pieSegments.map((segment, index) => {\n  const colors = [\n    '#2563eb',\n    '#7c3aed',\n    '#059669',\n    '#d97706',\n    '#dc2626',\n    '#0891b2',\n    '#db2777',\n    '#65a30d',\n    '#9333ea'\n  ];\n\n  return `\n    <div class=\"legend-item\">\n      <span\n        class=\"legend-color\"\n        style=\"background:${colors[index % colors.length]}\"\n      ></span>\n      <span>\n        ${esc(segment.label)}\n        <strong>${segment.percentage.toFixed(1)}%</strong>\n      </span>\n    </div>\n  `;\n}).join('');\n\nconst trendsHtml = majorTrends.length\n  ? majorTrends.map(trend => `\n      <div class=\"insight\">\n        <h3>${esc(trend.title || trend.trend || '')}</h3>\n        <p>${esc(trend.description || trend.summary || trend)}</p>\n      </div>\n    `).join('')\n  : '<p class=\"muted\">No major trends identified.</p>';\n\nconst developmentsHtml = importantDevelopments.length\n  ? importantDevelopments.map(development => `\n      <div class=\"insight\">\n        <h3>${esc(development.title || '')}</h3>\n        <p>${esc(development.description || development.summary || development)}</p>\n      </div>\n    `).join('')\n  : '<p class=\"muted\">No major developments identified.</p>';\n\nconst recommendationsHtml = `\n  ${\n    Array.isArray(recommendations.recommended_reading)\n      ? `\n        <h3>Recommended Reading</h3>\n        ${recommendations.recommended_reading.map(item => `\n          <div class=\"recommendation\">\n            <strong>${esc(item.title || item.name || item)}</strong>\n            <p>${esc(item.reason || item.why || '')}</p>\n          </div>\n        `).join('')}\n      `\n      : ''\n  }\n\n  ${\n    Array.isArray(recommendations.watch_this)\n      ? `\n        <h3>Watch This</h3>\n        ${recommendations.watch_this.map(item => `\n          <div class=\"recommendation\">\n            <strong>${esc(item.title || item.name || item)}</strong>\n            <p>${esc(item.reason || item.why || '')}</p>\n          </div>\n        `).join('')}\n      `\n      : ''\n  }\n\n  ${\n    Array.isArray(recommendations.learn_this)\n      ? `\n        <h3>Learn This</h3>\n        ${recommendations.learn_this.map(item => `\n          <div class=\"recommendation\">\n            <strong>${esc(item.title || item.name || item)}</strong>\n            <p>${esc(item.reason || item.why || '')}</p>\n          </div>\n        `).join('')}\n      `\n      : ''\n  }\n`;\n\nconst html = `\n<!DOCTYPE html>\n<html>\n<head>\n<meta charset=\"UTF-8\">\n\n<style>\n  @page {\n    size: A4;\n    margin: 15mm;\n  }\n\n  body {\n    font-family: Arial, sans-serif;\n    color: #1f2937;\n    line-height: 1.55;\n  }\n\n  h1 {\n    color: #111827;\n    font-size: 30px;\n    margin-bottom: 8px;\n  }\n\n  h2 {\n    color: #1d4ed8;\n    border-bottom: 2px solid #e5e7eb;\n    padding-bottom: 6px;\n  }\n\n  h3 {\n    color: #374151;\n  }\n\n  .cover {\n    text-align: center;\n    padding-top: 80px;\n    page-break-after: always;\n  }\n\n  .subtitle {\n    color: #6b7280;\n    font-size: 16px;\n  }\n\n  .section {\n    page-break-before: always;\n  }\n\n  .story {\n    display: flex;\n    gap: 15px;\n    padding: 14px 0;\n    border-bottom: 1px solid #e5e7eb;\n  }\n\n  .rank {\n    font-size: 26px;\n    font-weight: bold;\n    color: #2563eb;\n    min-width: 35px;\n  }\n\n  .meta {\n    color: #6b7280;\n    font-size: 13px;\n    margin-bottom: 10px;\n  }\n\n  .muted {\n    color: #6b7280;\n  }\n\n  .article {\n    page-break-inside: avoid;\n    margin-bottom: 30px;\n  }\n\n  .insight {\n    padding: 14px;\n    margin: 12px 0;\n    background: #f8fafc;\n    border-left: 4px solid #2563eb;\n  }\n\n  .recommendation {\n    padding: 12px;\n    margin: 10px 0;\n    background: #f8fafc;\n    border-radius: 6px;\n  }\n\n  .chart-container {\n    display: flex;\n    align-items: center;\n    gap: 40px;\n    margin: 25px 0;\n  }\n\n  .pie-chart {\n    width: 220px;\n    height: 220px;\n    border-radius: 50%;\n    background: ${pieGradient};\n    flex-shrink: 0;\n  }\n\n  .legend {\n    flex: 1;\n  }\n\n  .legend-item {\n    display: flex;\n    align-items: center;\n    gap: 8px;\n    margin: 8px 0;\n  }\n\n  .legend-color {\n    width: 14px;\n    height: 14px;\n    border-radius: 3px;\n    display: inline-block;\n  }\n\n  table {\n    width: 100%;\n    border-collapse: collapse;\n    margin-top: 15px;\n  }\n\n  th, td {\n    border-bottom: 1px solid #e5e7eb;\n    padding: 9px;\n    text-align: left;\n  }\n\n  th {\n    background: #f3f4f6;\n  }\n\n  a {\n    color: #2563eb;\n    text-decoration: none;\n  }\n</style>\n\n</head>\n\n<body>\n\n<div class=\"cover\">\n  <h1>Technology News Intelligence Report</h1>\n\n  <p class=\"subtitle\">\n    Technology, AI, Cybersecurity, Linux, Development, Robotics & Research\n  </p>\n\n  <p>\n    Generated: ${new Date().toLocaleString('en-GB', {\n      hour: 'numeric',\n      minute: '2-digit',\n      hour12: true\n    })}\n  </p>\n\n  <p>\n    Total articles analyzed:\n    <strong>${esc(summary.total_articles || articles.length)}</strong>\n  </p>\n</div>\n\n<section>\n  <h1>Top 5 Stories</h1>\n  ${top5Html}\n</section>\n\n<section class=\"section\">\n  <h1>Technology Landscape</h1>\n\n  <div class=\"chart-container\">\n    <div class=\"pie-chart\"></div>\n\n    <div class=\"legend\">\n      ${pieLegend}\n    </div>\n  </div>\n\n  <table>\n    <thead>\n      <tr>\n        <th>Topic</th>\n        <th>Stories</th>\n        <th>Share</th>\n      </tr>\n    </thead>\n\n    <tbody>\n      ${topicRows}\n    </tbody>\n  </table>\n</section>\n\n<section class=\"section\">\n  <h1>Emerging Trends</h1>\n  ${trendsHtml}\n</section>\n\n<section class=\"section\">\n  <h1>Important Developments</h1>\n  ${developmentsHtml}\n</section>\n\n<section class=\"section\">\n  <h1>Recommendations</h1>\n  ${recommendationsHtml || '<p class=\"muted\">No recommendations available.</p>'}\n</section>\n\n<section class=\"section\">\n  <h1>All News</h1>\n  ${articlesHtml}\n</section>\n\n</body>\n</html>\n`;\n\nreturn [\n  {\n    json: {\n      html\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2976,
+        -1200
+      ],
+      "id": "8ee50178-53a8-4f49-9926-671002f99031",
+      "name": "Build PDF HTML"
+    },
+    {
+      "parameters": {
+        "operation": "sendDocument",
+        "chatId": "-1004348263086",
+        "binaryData": true,
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3344,
+        -1200
+      ],
+      "id": "40a48f5b-59dc-44ce-b8d9-8e1c4e52775d",
+      "name": "Send a document1",
+      "webhookId": "ebe6acc5-efd3-4090-b497-4d38a5b25d1e",
+      "credentials": {
+        "telegramApi": {
+          "id": "rPlrTQhyYSxHx9dn",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://pdf:3000/pdf",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "text/html",
+        "body": "={{ $json.html }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        3152,
+        -1200
+      ],
+      "id": "3dcbc1f0-3c62-4fe2-8af6-a9f403099fab",
+      "name": "HTTP Request (Generate PDF)"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "68f39475-d6b3-455b-b8b6-ae10b963c43d",
+              "leftValue": "={{ $json.topic }}",
+              "rightValue": "=Cybersecurity",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1712,
+        -1184
+      ],
+      "id": "fde24366-f935-45cd-8e32-95cb5e5ec98c",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\n\nconst articles = input.articles ?? [];\n\nreturn articles.map(article => ({\n  json: article\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1520,
+        -1184
+      ],
+      "id": "e79e676f-928b-4a71-9464-cd05e7044d13",
+      "name": "Split Articles for Routing"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        1104,
+        -656
+      ],
+      "id": "b5c1453c-548f-4c2d-bb85-e3c64a14c877",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "grcCu5q24WjCAIKn",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a cybersecurity intelligence analyst and cybersecurity learning assistant.\n\nAnalyze ONLY the cybersecurity news articles provided to you.\n\nThe user is a first-year cybersecurity student. They already have basic cybersecurity knowledge but are still developing practical skills, Linux knowledge, cloud knowledge, programming ability, and professional cybersecurity understanding.\n\nThe user is studying in English, so ALL output must be written in clear English.\n\nDo NOT write Arabic.\n\nDo NOT invent facts.\n\nDo NOT infer unsupported facts as if they were confirmed.\n\nUse only information supported by the provided articles and clearly distinguish between:\n\n* confirmed facts\n* reasonable analysis\n* emerging patterns\n\nPreserve original source URLs exactly.\n\nThe output must contain TWO connected but clearly separate reports:\n\n1. Cybersecurity Intelligence Report\n2. Cybersecurity Learning Report\n\nThe Cybersecurity Intelligence Report focuses on what happened.\n\nThe Cybersecurity Learning Report focuses on what the student should learn from what happened.\n\n==================================================\nPART 1 — CYBERSECURITY INTELLIGENCE REPORT\n==========================================\n\nCreate:\n\n* executive_summary\n* top_5\n* cybersecurity_landscape\n* vulnerability_watch\n* threats_and_attacks\n* security_research\n* major_developments\n* emerging_trends\n* china_cybersecurity\n* country_attack_analysis\n* uk_sector_attack_analysis\n* cybersecurity_technology\n* recommendations\n\n---\n\n## EXECUTIVE SUMMARY\n\nWrite a meaningful weekly summary.\n\nDo not make it only one or two sentences.\n\nExplain the most important developments, attack activity, vulnerabilities, research, and major technology/security trends supported by the articles.\n\nKeep it concise enough for a weekly report but detailed enough to provide useful intelligence.\n\n---\n\n## TOP 5 STORIES\n\nSelect the 5 most important cybersecurity stories.\n\nFor each story return:\n\n* rank\n* title\n* date\n* topic\n* importance_score\n* impact_level\n* summary\n* why_it_matters\n* who_is_affected\n* what_happened\n* source\n* url\n\nThe summary should be a short but useful paragraph.\n\nDo NOT reduce important stories to one sentence.\n\nExplain enough context for a cybersecurity student to understand why the story matters.\n\nPreserve the original source URL exactly.\n\n---\n\n## CYBERSECURITY LANDSCAPE\n\nGroup the week's cybersecurity stories into these categories when supported by the articles:\n\n* Vulnerabilities & CVEs\n* Threats & Attacks\n* Ransomware & Malware\n* Data Breaches & Privacy\n* Network Security\n* Application Security\n* Cloud Security\n* Identity & Access\n* Security Research\n* Security Tools\n* AI Security\n* Linux Security\n* General Cybersecurity\n\nReturn:\n\n* topic\n* count\n* percentage\n\nThe percentages must be calculated from the available story/topic data.\n\nDo not invent categories that have no supporting stories.\n\nThe report renderer may use these values to create a pie chart.\n\nAlso provide:\n\n* landscape_analysis\n\nWrite 2–4 sentences explaining what dominated the week's cybersecurity coverage and why that matters.\n\n---\n\n## VULNERABILITY WATCH\n\nSelect exactly 7 vulnerabilities when at least 7 qualifying vulnerabilities exist.\n\nPrioritize:\n\n* Critical severity\n* High severity\n* Actively exploited vulnerabilities\n* Widely deployed software\n* Large potential impact\n* Recent vulnerabilities\n\nIf fewer than 7 qualifying vulnerabilities exist in the provided articles, return only the vulnerabilities actually supported by the articles.\n\nNever invent CVE numbers, severity ratings, affected products, exploitation status, or technical details.\n\nFor each vulnerability return:\n\n* title\n* cve\n* severity\n* importance_score\n* affected_product\n* security_layer\n* description\n* what_happened\n* who_is_affected\n* why_it_matters\n* recommended_action\n* source\n* url\n\nDESCRIPTION:\n\nExplain what the vulnerability is.\n\nThis should be detailed enough for a first-year cybersecurity student to understand the basic idea.\n\nDo not make it excessively technical.\n\nWHAT HAPPENED:\n\nExplain what actually happened this week.\n\nIf the article describes exploitation, attacks, patches, incidents, or confirmed activity, explain that here.\n\nDo not repeat the description.\n\nSecurity layers:\n\n* Data Security\n* Application Security\n* Endpoint Security\n* Network Security\n* Identity & Access\n* Human Layer\n* Cloud & Infrastructure Security\n\n---\n\n## THREAT ACTIVITY\n\nUse the section name:\n\nThreat Activity\n\nThis section should explain what attackers or threat actors are doing currently.\n\nIdentify significant activity such as:\n\n* phishing campaigns\n* ransomware\n* malware campaigns\n* credential theft\n* exploitation campaigns\n* supply-chain attacks\n* identity attacks\n* AI-related attacks\n* data theft\n* major breaches\n* threat actors\n\nFor each significant activity explain:\n\n* activity\n* what_happened\n* who_was_targeted\n* attack_method\n* impact\n* why_it_matters\n* defensive_lesson\n* source\n* url\n\nFocus on actual activity reported during the reporting period.\n\nDo not create fictional attacks.\n\nIf only a small number of significant campaigns are supported by the articles, return only those campaigns.\n\n---\n\n## SECURITY RESEARCH\n\nIdentify meaningful security research, technical discoveries, defensive techniques, security tools, or important research developments.\n\nDo not make this section one-line summaries.\n\nFor each item explain:\n\n* title\n* what_was_discovered\n* technical_explanation\n* why_it_matters\n* practical_security_relevance\n* source\n* url\n\nKeep the explanation understandable to a cybersecurity student.\n\n---\n\n## MAJOR DEVELOPMENTS\n\nIdentify major cybersecurity developments from the week.\n\nExamples include:\n\n* major security incidents\n* important product/security releases\n* major open-source security developments\n* major research breakthroughs\n* major acquisitions\n* important standards/protocol developments\n* large-scale incidents\n\nFor each:\n\n* title\n* summary\n* what_changed\n* impact\n* why_it_matters\n* affected_area\n* source\n* url\n\nGive enough detail to meaningfully fill the report section.\n\n---\n\n## EMERGING TRENDS\n\nIdentify patterns across multiple stories.\n\nA trend is NOT simply one news story.\n\nA trend should normally be supported by multiple related stories or strong evidence from the available articles.\n\nFor each trend return:\n\n* trend\n* explanation\n* evidence\n* countries_or_regions\n* why_it_matters\n* confidence\n\ncountries_or_regions must identify where the trend is occurring when the articles provide that information.\n\nIf it is global, explicitly say:\n\n\"Global\"\n\nIf it is concentrated in a specific country or region, identify it.\n\nDo not invent geographical information.\n\n---\n\n## CHINA CYBERSECURITY\n\nCreate a dedicated China cybersecurity section.\n\nUse only when the provided articles contain meaningful China-related cybersecurity information.\n\nFocus on:\n\n* cybersecurity technology\n* security research\n* defensive technology\n* cybersecurity products\n* major incidents\n* AI security\n* cyber capabilities\n* security infrastructure\n* important developments involving Chinese organizations or researchers\n\nFor each relevant item explain:\n\n* development\n* what_happened\n* why_it_matters\n* technical_or_security_significance\n* source\n* url\n\nDo not make unsupported geopolitical claims.\n\nDo not state that China is \"ahead of all other countries\" unless the provided evidence explicitly supports such a claim.\n\n---\n\n## COUNTRY ATTACK ANALYSIS\n\nCreate a data section for attack activity by country only when the articles provide enough geographical information.\n\nReturn:\n\n* country\n* attack_count\n* percentage\n* notable_activity\n\nThis data may be used to create a bar chart showing countries with the highest reported attack activity.\n\nDo not interpret missing geographical information as zero attacks.\n\n---\n\n## UK SECTOR ATTACK ANALYSIS\n\nFocus specifically on the United Kingdom when UK-related attack data exists.\n\nIdentify affected UK sectors such as:\n\n* Healthcare\n* Education\n* Finance\n* Government\n* Retail\n* Technology\n* Manufacturing\n* Energy\n* Telecommunications\n* Other\n\nReturn:\n\n* sector\n* attack_count\n* percentage\n* notable_activity\n\nThis data may be used to create a UK sector attack bar chart.\n\nOnly include sectors supported by the articles.\n\n---\n\n## CYBERSECURITY TECHNOLOGY OF THE WEEK\n\nIdentify one significant cybersecurity-related technology from the week's news.\n\nThe technology may involve:\n\n* AI security\n* security tooling\n* defensive technology\n* identity/security technology\n* detection technology\n* cloud security\n* network security\n* endpoint security\n* privacy technology\n* other meaningful cybersecurity technology\n\nReturn:\n\n* technology\n* what_it_is\n* what_is_new\n* positive_implications\n* negative_implications\n* cybersecurity_impact\n* countries_or_regions\n* source\n* url\n\nDo not invent technology developments that are not supported by the articles.\n\n---\n\n## RECOMMENDATIONS\n\nReturn:\n\n* recommended_reading\n* watch_this\n* learn_this\n* ignore_this\n\nEach recommendation MUST include:\n\n* title\n* reason\n* relevance\n* source\n* url\n\nThe \"reason\" field is mandatory.\n\nDo not simply tell the student to read, watch, or learn something.\n\nExplain WHY it is recommended.\n\nFor example:\n\nRecommended Reading:\nA security research article\n\nReason:\nThis article explains a technique directly connected to the increase in identity-related attacks observed this week.\n\n---\n\n## PART 2 — CYBERSECURITY LEARNING REPORT\n\nCreate a separate learning guide based ONLY on the cybersecurity intelligence identified above.\n\nPurpose:\n\n\"What should a cybersecurity student learn from what happened this week?\"\n\nThe learning report must NOT simply repeat the news.\n\nIt should transform important events into understandable learning opportunities.\n\nThe student has basic first-year cybersecurity knowledge.\n\nTherefore:\n\n* do not treat the student as a complete beginner\n* do not assume advanced knowledge\n* explain unfamiliar concepts clearly\n* introduce technical vocabulary when necessary\n* provide enough explanation to understand the concept\n* avoid unnecessary depth\n* encourage further research\n\n---\n\n## LEARNING SUMMARY\n\nWrite a useful weekly learning summary.\n\nExplain:\n\n* what the student should understand this week\n* why these topics matter\n* how the week's news connects to cybersecurity knowledge\n\n---\n\n## WEEKLY LEARNING TOPICS\n\nCreate 3–5 learning topics.\n\nDo NOT repeat topics from previous weeks when historical learning data is provided.\n\nEach topic must contain:\n\n* topic\n* difficulty\n* beginner_explanation\n* concept\n* why_to_learn\n* technical_terms\n* connection_to_this_weeks_news\n* what_to_study\n* practical_exercise\n* kali_linux_connection\n* tools_to_explore\n* next_step\n\nBEGINNER_EXPLANATION:\n\nThis is mandatory.\n\nExplain the concept as if the student has heard the words but does not fully understand them.\n\nUse simple technical English.\n\nExample:\n\n\"CI/CD is a system that automates how software is tested and delivered. A pipeline can automatically build code, run tests, and deploy it. Because these systems often contain credentials and access to other systems, attackers may target them.\"\n\nDo not assume the student already understands terms such as:\n\n* CI/CD\n* RCE\n* pipeline\n* secrets\n* service accounts\n* least privilege\n* artifact\n* supply chain\n* privilege escalation\n\nIf such terms appear, explain them.\n\n---\n\n## TECHNICAL VOCABULARY INSIDE LEARNING TOPICS\n\nFor each learning topic identify important technical terms introduced by the topic.\n\nFor each term return:\n\n* term\n* simple_meaning\n* cybersecurity_meaning\n\nKeep the explanation short but useful.\n\n---\n\n## TERMINAL — LINUX PRACTICE\n\nCreate a section:\n\nTerminal — Linux Practice\n\nProvide exactly 3 Linux commands that are broadly useful on Linux systems.\n\nPrefer commands useful for:\n\n* navigation\n* files\n* permissions\n* processes\n* networking\n* logs\n* system information\n\nFor each command return:\n\n* command\n* platform\n* what_it_is\n* why_learn_it\n* cybersecurity_use\n* try_it\n* expected_result\n* safety_note\n\nThe 3 commands should generally work on Debian and Kali Linux.\n\nDo not repeat commands from previous weeks when historical learning data is available.\n\n---\n\n## KALI LINUX SECURITY PRACTICE\n\nProvide exactly 1 Kali Linux-specific security command or exercise.\n\nIt must be appropriate for:\n\n* a local VM\n* CTF\n* intentionally vulnerable lab\n* isolated authorized environment\n\nReturn:\n\n* command_or_exercise\n* platform\n* what_it_is\n* why_learn_it\n* cybersecurity_use\n* try_it\n* expected_result\n* safety_note\n\nNever instruct the student to attack real systems.\n\n---\n\n## KALI LINUX TOOL OF THE WEEK\n\nSelect 1 Kali Linux tool each week.\n\nDo NOT repeat tools from previous weeks when historical learning data is available.\n\nThe tool should be selected because it is relevant to the week's learning topics or cybersecurity news.\n\nReturn:\n\n* tool_name\n* category\n* platform\n* what_it_is\n* what_it_does\n* why_it_matters\n* who_uses_it\n* common_use_cases\n* learning_connection\n* safe_lab_use\n* beginner_note\n* official_source\n\nThe explanation should be detailed enough to make the student interested in researching the tool further, but should not become a huge manual.\n\nUse official Kali documentation as the preferred reference for Kali-specific tool information.\n\n---\n\n## CYBERSECURITY VOCABULARY\n\nCreate exactly 5 vocabulary terms.\n\nDo NOT repeat terms from previous weeks when historical learning data is available.\n\nReturn a table-like JSON structure:\n\n* term\n* simple_meaning\n* cybersecurity_meaning\n* example\n\nAll vocabulary content must be in English.\n\nChoose useful cybersecurity terminology that appeared in the week's news or learning topics.\n\n---\n\n## LINUX & SECURITY LAB\n\nCreate a small section containing 1–2 useful Linux/security concepts.\n\nFor each item return:\n\n* topic\n* platform\n* what_it_is\n* beginner_explanation\n* why_it_matters\n* practical_task\n* cybersecurity_connection\n\nPlatform must clearly identify whether the lesson works on:\n\n* Linux\n* Kali Linux\n* both\n\nDo not unnecessarily mention Debian by name unless it is relevant.\n\n---\n\n## CODING FOR CYBERSECURITY\n\nCreate a short coding lesson.\n\nDo not make this section large.\n\nChoose ONE practical cybersecurity-related coding concept.\n\nShow how the same basic task could be approached in:\n\n* Python\n* JavaScript\n* C#\n\nFor each language return:\n\n* language\n* code\n* explanation\n* syntax_note\n* cybersecurity_use\n\nThe code should be short and understandable.\n\nThe goal is to help the student understand differences in syntax and how programming languages can be useful in cybersecurity.\n\nDo not repeat the same coding lesson from previous weeks when historical learning data is available.\n\nPrefer Python when choosing the primary example because it is highly useful for cybersecurity learning.\n\nOnly recommend code execution in safe/local environments.\n\n---\n\n## CYBERSECURITY REPORT WRITING\n\nCreate one short professional writing lesson.\n\nReturn:\n\n* writing_term\n* writing_rule\n* small_example\n* professional_report_example\n* student_vs_professional_difference\n* trusted_reference\n\nThe trusted_reference should point to a real, reliable cybersecurity report or advisory from an organization such as:\n\n* CISA\n* NIST\n* Microsoft\n* Google\n* Cisco\n* Mandiant\n* Palo Alto Networks\n* another reputable security organization\n\nPreserve the original URL.\n\nThe purpose is to teach the student how professional cybersecurity reports differ from university assignments.\n\n---\n\n## NETWORKING + CISCO PACKET TRACER\n\nCreate exactly ONE networking lesson.\n\nReturn:\n\n* concept\n* beginner_explanation\n* theory\n* packet_tracer_task\n* why_it_matters\n* cybersecurity_connection\n* expected_result\n* next_step\n\nThe lesson should include both:\n\n1. theory\n2. practical Packet Tracer activity\n\nDo not create multiple networking lessons in the same weekly report.\n\nDo not repeat previous networking lessons when historical learning data is available.\n\n---\n\n## CLOUD SECURITY\n\nCreate exactly ONE cloud lesson.\n\nThe student is new to cloud computing.\n\nTherefore begin with a basic explanation of what cloud computing is before teaching the security concept.\n\nReturn:\n\n* concept\n* beginner_explanation\n* theory\n* practical_task\n* why_it_matters\n* cybersecurity_connection\n* news_connection\n* expected_result\n* next_step\n\nChoose one concept such as:\n\n* IAM\n* security groups\n* storage permissions\n* secrets\n* network segmentation\n* logging\n* cloud identity\n\nDo not teach multiple cloud concepts in the same week.\n\nDo not repeat previous cloud lessons.\n\n---\n\n## CAREER & PRACTICAL SKILLS\n\nThis section has TWO purposes.\n\nPurpose A:\n\nIdentify practical skills that this week's cybersecurity news suggests companies need.\n\nReturn:\n\n* skills\n* evidence_from_news\n* why_companies_need_it\n* how_student_can_develop_it\n\nPurpose B:\n\nIntroduce ONE cybersecurity career area each week.\n\nDo NOT repeat career areas when historical learning data is available.\n\nPossible career areas include:\n\n* Penetration Testing\n* Security Operations\n* Incident Response\n* Digital Forensics\n* Vulnerability Management\n* Cloud Security\n* Application Security\n* Network Security\n* Threat Intelligence\n* Security Engineering\n* GRC\n* Malware Analysis\n* Security Research\n\nReturn:\n\n* career_area\n* what_the_role_is\n* typical_responsibilities\n* who_hires_for_it\n* common_departments\n* important_skills\n* useful_tools\n* entry_level_learning_path\n* demand_in_uk\n* remote_work_possibility\n* connection_to_this_weeks_news\n* next_step\n\nFor UK demand and remote-work claims, only make claims supported by reliable current evidence.\n\nUse the NICE Framework as a reference for understanding cybersecurity work roles, tasks, knowledge, and skills where relevant.\n\n---\n\n## CYBERSECURITY TECHNOLOGY OF THE WEEK — LEARNING\n\nIdentify ONE emerging technology from the week's cybersecurity-related coverage.\n\nThe technology may be:\n\n* AI security technology\n* defensive security technology\n* new security tooling\n* security automation\n* identity technology\n* detection technology\n* privacy technology\n* cloud security technology\n* other relevant cybersecurity technology\n\nReturn:\n\n* technology\n* beginner_explanation\n* what_it_does\n* why_it_is_emerging\n* positive_implications\n* negative_implications\n* cybersecurity_use\n* countries_or_regions\n* uk_relevance\n* global_relevance\n* connection_to_this_weeks_news\n* next_step\n* source\n* url\n\nThe analysis should identify WHERE the trend is happening.\n\nWhen appropriate, compare:\n\n* United Kingdom\n* Global activity\n* other relevant countries\n\nDo not assume that every technology trend is UK-specific.\n\n---\n\n## LEARNING HISTORY / NON-REPETITION\n\nIf previous learning history is supplied, use it to avoid unnecessary repetition.\n\nDo not repeat:\n\n* learning topics\n* terminal commands\n* Kali tools\n* vocabulary terms\n* coding lessons\n* networking lessons\n* cloud lessons\n* career areas\n\nunless repetition is educationally justified.\n\nIf no learning history is supplied, generate the best current selection.\n\n---\n\n## LEARNING SAFETY\n\nAll practical cybersecurity exercises must be safe and authorized.\n\nOnly recommend activities in:\n\n* local VMs\n* CTFs\n* intentionally vulnerable labs\n* isolated test environments\n* systems the student owns or is explicitly authorized to test\n\nDo not provide instructions for attacking real systems, organizations, websites, or networks.\n\n---\n\n## REPORTING PERIOD\n\nUse a human-readable reporting period.\n\nDo not use only numeric dates such as:\n\n09/08/2026\n\nPrefer:\n\n9 August 2026\n\nor:\n\n3–9 August 2026\n\n---\n\n## OUTPUT FORMAT\n\nReturn ONLY valid JSON.\n\nUse exactly this top-level structure:\n\n{\n\"cybersecurity_report\": {\n\"title\": \"Cybersecurity Intelligence Report\",\n\"reporting_period\": \"\",\n\"executive_summary\": \"\",\n\"top_5\": [],\n\"cybersecurity_landscape\": [],\n\"vulnerability_watch\": [],\n\"threats_and_attacks\": [],\n\"security_research\": [],\n\"major_developments\": [],\n\"emerging_trends\": [],\n\"china_cybersecurity\": [],\n\"country_attack_analysis\": [],\n\"uk_sector_attack_analysis\": [],\n\"cybersecurity_technology\": {},\n\"recommendations\": {\n\"recommended_reading\": [],\n\"watch_this\": [],\n\"learn_this\": [],\n\"ignore_this\": []\n}\n},\n\n\"learning_report\": {\n\"title\": \"Cybersecurity Weekly Learning Guide\",\n\"reporting_period\": \"\",\n\"learning_summary\": \"\",\n\"learning_topics\": [],\n\"terminal_linux_practice\": [],\n\"kali_linux_security_practice\": {},\n\"kali_linux_tool_of_the_week\": {},\n\"cybersecurity_vocabulary\": [],\n\"linux_security_lab\": [],\n\"coding_for_cybersecurity\": {},\n\"cybersecurity_report_writing\": {},\n\"networking_packet_tracer\": {},\n\"cloud_security\": {},\n\"career_practical_skills\": {},\n\"cybersecurity_technology_learning\": {}\n}\n}\n\nNEWS INPUT:\n\n{{ JSON.stringify($input.all()) }}\n\nPREVIOUS LEARNING HISTORY:\n\n{{ JSON.stringify($json.previous_learning_history ?? {}) }}\n",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2032,
+        -1680
+      ],
+      "id": "286d17b8-04e3-4bf1-b5a3-25317a9f8797",
+      "name": "Cybersecurity AI Agent"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a technology news intelligence analyst.\n\nAnalyze the following news articles and produce a structured weekly technology intelligence report.\n\nIMPORTANT:\n- Analyze EVERY article.\n- Do not omit articles.\n- Do not invent facts.\n- Preserve every original source URL exactly.\n- Assign exactly ONE primary topic to every article.\n- Return ONLY valid JSON.\n- Do not use Markdown.\n- Do not wrap the JSON in ```json fences.\n\nTOPIC CLASSIFICATION\n\nEvery article MUST be assigned to exactly ONE of these topics:\n\n1. AI & Machine Learning\n2. Cybersecurity\n3. Databases & Data\n4. Linux & Operating Systems\n5. IT Support & Infrastructure\n6. Web Development\n7. Game Development\n8. Robotics & Hardware\n9. Research & Science\n10. Cloud & DevOps\n11. Programming & Software\n12. General Technology\n\nChoose the topic based on the actual article content.\n\nThe source category is only a hint and must NOT override the actual article content.\n\nARTICLE ANALYSIS\n\nFor every article determine:\n\n- importance_score: integer from 1 to 10\n- impact_level: Low, Medium, High, or Critical\n- country_or_region: main country or region affected, if identifiable\n- who_is_affected\n- why_it_matters\n- short_summary\n- key_takeaway\n- source\n- url\n\nSCORING\n\nimportance_score:\n1 = very minor technology news\n10 = extremely important development with significant technical, security, economic, industry, or societal impact\n\nimpact_level:\n- Low\n- Medium\n- High\n- Critical\n\nAlso calculate:\n\nsource_reliability: integer from 0 to 100\n\nSource reliability should consider:\n- reputation of the source\n- quality of evidence\n- whether the claim is confirmed\n- whether the article is reporting facts, analysis, or speculation\n\nDo NOT confuse source reliability with story importance.\n\nTOP 5\n\nSelect the five most important stories overall.\n\nRank them from 1 to 5.\n\nTRENDS\n\nIdentify the major technology trends and patterns appearing across the collected articles.\n\nIMPORTANT DEVELOPMENTS\n\nIdentify significant:\n- research papers\n- scientific discoveries\n- technical breakthroughs\n- product launches\n- AI model releases\n- cybersecurity incidents\n- major vulnerabilities\n- major announcements\n- important hardware developments\n- major industry developments\n\nRECOMMENDATIONS\n\nCreate recommendations for the reader:\n\n1. recommended_reading\nA story that deserves a full read.\n\n2. watch_this\nA development that may become important in the near future.\n\n3. learn_this\nA technology, concept, tool, or subject that appeared frequently or is worth understanding.\n\nEach recommendation must include:\n- title\n- reason\n- topic\n- url\n\nDo not recommend something that is not supported by the collected articles.\n\nREPORT SUMMARY\n\nCalculate:\n- total_articles\n- number of articles per topic\n- number of articles per country/region when identifiable\n- top_topics\n- major_trends\n- important_developments\n\nTOPIC COUNTS\n\nThe topic_counts object MUST contain every topic listed above, even if its count is 0.\n\nCOUNTRY COUNTS\n\nCreate country_counts using the country_or_region values found in the articles.\n\nOUTPUT FORMAT\n\nReturn exactly this JSON structure:\n\n{\n  \"report_summary\": {\n    \"total_articles\": 0,\n    \"top_topics\": [],\n    \"topic_counts\": {\n      \"AI & Machine Learning\": 0,\n      \"Cybersecurity\": 0,\n      \"Databases & Data\": 0,\n      \"Linux & Operating Systems\": 0,\n      \"IT Support & Infrastructure\": 0,\n      \"Web Development\": 0,\n      \"Game Development\": 0,\n      \"Robotics & Hardware\": 0,\n      \"Research & Science\": 0,\n      \"Cloud & DevOps\": 0,\n      \"Programming & Software\": 0,\n      \"General Technology\": 0\n    },\n    \"country_counts\": {},\n    \"major_trends\": [],\n    \"important_developments\": []\n  },\n\n  \"top_5\": [\n    {\n      \"rank\": 1,\n      \"title\": \"\",\n      \"topic\": \"\",\n      \"importance_score\": 0,\n      \"impact_level\": \"\",\n      \"country_or_region\": \"\",\n      \"who_is_affected\": \"\",\n      \"why_it_matters\": \"\",\n      \"summary\": \"\",\n      \"key_takeaway\": \"\",\n      \"source\": \"\",\n      \"source_reliability\": 0,\n      \"url\": \"\"\n    }\n  ],\n\n  \"recommendations\": {\n    \"recommended_reading\": {\n      \"title\": \"\",\n      \"reason\": \"\",\n      \"topic\": \"\",\n      \"url\": \"\"\n    },\n    \"watch_this\": {\n      \"title\": \"\",\n      \"reason\": \"\",\n      \"topic\": \"\",\n      \"url\": \"\"\n    },\n    \"learn_this\": {\n      \"title\": \"\",\n      \"reason\": \"\",\n      \"topic\": \"\",\n      \"url\": \"\"\n    }\n  },\n\n  \"articles\": [\n    {\n      \"title\": \"\",\n      \"topic\": \"\",\n      \"importance_score\": 0,\n      \"impact_level\": \"\",\n      \"country_or_region\": \"\",\n      \"who_is_affected\": \"\",\n      \"why_it_matters\": \"\",\n      \"summary\": \"\",\n      \"key_takeaway\": \"\",\n      \"source\": \"\",\n      \"source_reliability\": 0,\n      \"url\": \"\"\n    }\n  ]\n}\n\nNEWS INPUT:\n\n{{ JSON.stringify($json.news) }}",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        816,
+        -1152
+      ],
+      "id": "d6fc65d8-06bb-4576-881b-bb6492d8d7c1",
+      "name": "AI Agent (General Report)"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\n\n// Get the AI Agent output\nlet raw =\n  input.output ??\n  input.text ??\n  input.response ??\n  input.content ??\n  '';\n\n// Convert non-string AI responses into JSON text\nif (typeof raw !== 'string') {\n  raw = JSON.stringify(raw);\n}\n\n// Remove Markdown code fences if the AI added them\nraw = raw\n  .replace(/^```json\\s*/i, '')\n  .replace(/^```\\s*/i, '')\n  .replace(/\\s*```$/i, '')\n  .trim();\n\n// Parse the AI response\nlet parsed;\n\ntry {\n  parsed = JSON.parse(raw);\n} catch (error) {\n  throw new Error(\n    'Cybersecurity AI output is not valid JSON: ' + error.message\n  );\n}\n\n// Validate the two main report objects\nif (\n  !parsed.cybersecurity_report ||\n  typeof parsed.cybersecurity_report !== 'object'\n) {\n  throw new Error(\n    'Missing or invalid cybersecurity_report in AI output.'\n  );\n}\n\nif (\n  !parsed.learning_report ||\n  typeof parsed.learning_report !== 'object'\n) {\n  throw new Error(\n    'Missing or invalid learning_report in AI output.'\n  );\n}\n\n// Return the two reports separately\nreturn [\n  {\n    json: {\n      cybersecurity_report: parsed.cybersecurity_report,\n      learning_report: parsed.learning_report\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2400,
+        -1680
+      ],
+      "id": "de44e4a6-009f-405c-9bad-3e0a04312509",
+      "name": "Parse Cybersecurity JSON"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\n\nconst report = data.cybersecurity_report ?? {};\nconst recommendations = report.recommendations ?? {};\n\n// Collect the structured cybersecurity report data\nreturn [{\n  json: {\n    report: report,\n\n    title:\n      report.title ??\n      'Cybersecurity Intelligence Report',\n\n    reporting_period:\n      report.reporting_period ?? '',\n\n    executive_summary:\n      report.executive_summary ?? '',\n\n    top_5:\n      Array.isArray(report.top_5)\n        ? report.top_5\n        : [],\n\n    cybersecurity_landscape:\n      Array.isArray(report.cybersecurity_landscape)\n        ? report.cybersecurity_landscape\n        : [],\n\n    vulnerability_watch:\n      Array.isArray(report.vulnerability_watch)\n        ? report.vulnerability_watch\n        : [],\n\n    threats_and_attacks:\n      Array.isArray(report.threats_and_attacks)\n        ? report.threats_and_attacks\n        : [],\n\n    security_research:\n      Array.isArray(report.security_research)\n        ? report.security_research\n        : [],\n\n    major_developments:\n      Array.isArray(report.major_developments)\n        ? report.major_developments\n        : [],\n\n    emerging_trends:\n      Array.isArray(report.emerging_trends)\n        ? report.emerging_trends\n        : [],\n\n    recommendations: {\n      recommended_reading:\n        Array.isArray(recommendations.recommended_reading)\n          ? recommendations.recommended_reading\n          : [],\n\n      watch_this:\n        Array.isArray(recommendations.watch_this)\n          ? recommendations.watch_this\n          : [],\n\n      learn_this:\n        Array.isArray(recommendations.learn_this)\n          ? recommendations.learn_this\n          : []\n    },\n\n    // Optional country and technology intelligence\n    country_attack_analysis:\n      Array.isArray(report.country_attack_analysis)\n        ? report.country_attack_analysis\n        : [],\n\n    uk_sector_attack_analysis:\n      Array.isArray(report.uk_sector_attack_analysis)\n        ? report.uk_sector_attack_analysis\n        : [],\n\n    china_cybersecurity:\n      Array.isArray(report.china_cybersecurity)\n        ? report.china_cybersecurity\n        : [],\n\n    cybersecurity_technology:\n      Array.isArray(report.cybersecurity_technology)\n        ? report.cybersecurity_technology\n        : []\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2640,
+        -1856
+      ],
+      "id": "14e5ace1-8e55-46ec-99a8-aeaf6fbbccd7",
+      "name": "Build Cybersecurity Report Data"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\n\nconst learning = data.learning_report ?? {};\n\n// Collect the structured learning report data\nreturn [{\n  json: {\n    report: learning,\n\n    title:\n      learning.title ??\n      'Cybersecurity Learning Report',\n\n    reporting_period:\n      learning.reporting_period ?? '',\n\n    learning_summary:\n      learning.learning_summary ?? '',\n\n    learning_topics:\n      Array.isArray(learning.learning_topics)\n        ? learning.learning_topics\n        : [],\n\n    // Linux and Kali Linux learning\n    linux_learning:\n      Array.isArray(learning.linux_learning)\n        ? learning.linux_learning\n        : [],\n\n    terminal_lessons:\n      Array.isArray(learning.terminal_lessons)\n        ? learning.terminal_lessons\n        : [],\n\n    kali_linux_tools:\n      Array.isArray(learning.kali_linux_tools)\n        ? learning.kali_linux_tools\n        : [],\n\n    // Cybersecurity vocabulary for English learning\n    cybersecurity_vocabulary:\n      Array.isArray(learning.cybersecurity_vocabulary)\n        ? learning.cybersecurity_vocabulary\n        : [],\n\n    // Small cybersecurity coding lesson\n    coding_section:\n      learning.coding_section ?? {},\n\n    // Cybersecurity report-writing practice\n    security_report_writing:\n      learning.security_report_writing ?? {},\n\n    // Weekly networking + Packet Tracer lesson\n    networking_lesson:\n      learning.networking_lesson ?? {},\n\n    // Beginner-friendly cloud security lesson\n    cloud_lesson:\n      learning.cloud_lesson ?? {},\n\n    // Career exploration and weekly cybersecurity role\n    career_and_practical_skills:\n      learning.career_and_practical_skills ?? {},\n\n    // Emerging cybersecurity technology of the week\n    emerging_cybersecurity_technology:\n      learning.emerging_cybersecurity_technology ?? {},\n\n    // UK and global trend comparison\n    learning_trends:\n      Array.isArray(learning.learning_trends)\n        ? learning.learning_trends\n        : []\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2624,
+        -1632
+      ],
+      "id": "18195791-9080-4084-88dd-01abad809907",
+      "name": "Build Learning Report Data"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\n\nconst esc = (value) =>\n  String(value ?? '')\n    .replace(/&/g, '&amp;')\n    .replace(/</g, '&lt;')\n    .replace(/>/g, '&gt;')\n    .replace(/\"/g, '&quot;')\n    .replace(/'/g, '&#39;');\n\nconst report = data.report ?? {};\n\nconst top5 = Array.isArray(data.top_5) ? data.top_5 : [];\nconst landscape = Array.isArray(data.landscape) ? data.landscape : [];\nconst vulnerabilities = Array.isArray(data.vulnerabilities)\n  ? data.vulnerabilities\n  : [];\nconst threats = Array.isArray(data.threats) ? data.threats : [];\nconst research = Array.isArray(data.research) ? data.research : [];\nconst developments = Array.isArray(data.developments)\n  ? data.developments\n  : [];\nconst trends = Array.isArray(data.trends) ? data.trends : [];\n\nconst recommendations = data.recommendations ?? {};\n\nconst countryBreakdown =\n  Array.isArray(data.country_attack_breakdown)\n    ? data.country_attack_breakdown\n    : Array.isArray(report.country_attack_breakdown)\n      ? report.country_attack_breakdown\n      : [];\n\nconst ukSectorBreakdown =\n  Array.isArray(data.uk_sector_attack_breakdown)\n    ? data.uk_sector_attack_breakdown\n    : Array.isArray(report.uk_sector_attack_breakdown)\n      ? report.uk_sector_attack_breakdown\n      : [];\n\nconst chinaSection =\n  data.china_cybersecurity ??\n  report.china_cybersecurity ??\n  null;\n\n// Format the generated timestamp in a readable UK-style 12-hour format.\nconst generatedAt = new Intl.DateTimeFormat('en-GB', {\n  day: 'numeric',\n  month: 'long',\n  year: 'numeric',\n  hour: 'numeric',\n  minute: '2-digit',\n  hour12: true\n}).format(new Date());\n\n// Format the reporting period if it is an ISO date or date range.\nconst formatDateText = (value) => {\n  if (!value) return '';\n\n  const text = String(value);\n\n  const dateMatch = text.match(/^(\\d{4})-(\\d{2})-(\\d{2})$/);\n\n  if (dateMatch) {\n    const date = new Date(\n      Number(dateMatch[1]),\n      Number(dateMatch[2]) - 1,\n      Number(dateMatch[3])\n    );\n\n    return new Intl.DateTimeFormat('en-GB', {\n      day: 'numeric',\n      month: 'long',\n      year: 'numeric'\n    }).format(date);\n  }\n\n  return esc(value);\n};\n\n// Build a reusable card list for text-based sections.\nconst listHtml = (items) => {\n  if (!Array.isArray(items) || items.length === 0) {\n    return '<p class=\"empty\">No major items identified.</p>';\n  }\n\n  return items.map((item, index) => {\n    if (typeof item === 'string') {\n      return `<div class=\"card\"><p>${esc(item)}</p></div>`;\n    }\n\n    const title =\n      item.title ??\n      item.trend ??\n      item.topic ??\n      `Item ${index + 1}`;\n\n    const summary =\n      item.summary ??\n      item.explanation ??\n      item.what_happened ??\n      '';\n\n    return `\n      <div class=\"card\">\n        <h3>${index + 1}. ${esc(title)}</h3>\n\n        ${\n          summary\n            ? `<p>${esc(summary)}</p>`\n            : ''\n        }\n\n        ${\n          item.evidence\n            ? `<p><strong>Evidence:</strong> ${esc(item.evidence)}</p>`\n            : ''\n        }\n\n        ${\n          item.who_was_targeted\n            ? `<p><strong>Who was targeted:</strong> ${esc(item.who_was_targeted)}</p>`\n            : ''\n        }\n\n        ${\n          item.why_it_matters\n            ? `<p><strong>Why it matters:</strong> ${esc(item.why_it_matters)}</p>`\n            : ''\n        }\n\n        ${\n          item.defensive_lesson\n            ? `<p><strong>Defensive lesson:</strong> ${esc(item.defensive_lesson)}</p>`\n            : ''\n        }\n\n        ${\n          item.location\n            ? `<p><strong>Location:</strong> ${esc(item.location)}</p>`\n            : ''\n        }\n\n        ${\n          item.url\n            ? `<p><a href=\"${esc(item.url)}\">Read the source →</a></p>`\n            : ''\n        }\n      </div>\n    `;\n  }).join('');\n};\n\n// Build the Top 5 stories with enough context to be useful.\nconst top5Html = top5.length\n  ? top5.slice(0, 5).map((story, index) => `\n      <article class=\"top-story\" id=\"top-story-${index + 1}\">\n        <div class=\"rank\">${index + 1}</div>\n\n        <div class=\"story-content\">\n          <h2>${esc(story.title ?? 'Untitled story')}</h2>\n\n          <div class=\"badge-row\">\n            ${\n              story.topic\n                ? `<span class=\"badge\">${esc(story.topic)}</span>`\n                : ''\n            }\n\n            ${\n              story.impact_level\n                ? `<span class=\"badge impact\">${esc(story.impact_level)}</span>`\n                : ''\n            }\n\n            ${\n              story.importance_score !== undefined\n                ? `<span class=\"score\">Importance: ${esc(story.importance_score)}/100</span>`\n                : ''\n            }\n          </div>\n\n          ${\n            story.date\n              ? `<p class=\"meta\"><strong>Date:</strong> ${esc(story.date)}</p>`\n              : ''\n          }\n\n          ${\n            story.summary\n              ? `<p>${esc(story.summary)}</p>`\n              : ''\n          }\n\n          ${\n            story.why_it_matters\n              ? `\n                <div class=\"insight-box\">\n                  <strong>Why it matters</strong>\n                  <p>${esc(story.why_it_matters)}</p>\n                </div>\n              `\n              : ''\n          }\n\n          ${\n            story.who_is_affected\n              ? `<p><strong>Who is affected:</strong> ${esc(story.who_is_affected)}</p>`\n              : ''\n          }\n\n          ${\n            story.source\n              ? `<p><strong>Source:</strong> ${esc(story.source)}</p>`\n              : ''\n          }\n\n          ${\n            story.url\n              ? `<a href=\"${esc(story.url)}\">Read the full story →</a>`\n              : ''\n          }\n        </div>\n      </article>\n    `).join('')\n  : '<p class=\"empty\">No top stories identified.</p>';\n\n// Build the vulnerability section and include the new Description field.\nconst vulnerabilityHtml = vulnerabilities.length\n  ? vulnerabilities.slice(0, 7).map((v, index) => {\n      const severity = String(v.severity ?? 'Unknown');\n      const severityClass = severity.toLowerCase().replace(/\\s+/g, '-');\n\n      return `\n        <article class=\"vulnerability\">\n          <div class=\"vuln-header\">\n            <span class=\"vuln-number\">${index + 1}</span>\n\n            <h2>${esc(v.title ?? 'Unnamed vulnerability')}</h2>\n\n            <span class=\"severity ${severityClass}\">\n              ${esc(severity)}\n            </span>\n          </div>\n\n          ${\n            v.cve\n              ? `<p><strong>CVE:</strong> ${esc(v.cve)}</p>`\n              : ''\n          }\n\n          ${\n            v.affected_product\n              ? `<p><strong>Affected product:</strong> ${esc(v.affected_product)}</p>`\n              : ''\n          }\n\n          ${\n            v.security_layer\n              ? `<p><strong>Security layer:</strong> ${esc(v.security_layer)}</p>`\n              : ''\n          }\n\n          ${\n            v.description\n              ? `\n                <div class=\"description-box\">\n                  <strong>Description</strong>\n                  <p>${esc(v.description)}</p>\n                </div>\n              `\n              : ''\n          }\n\n          ${\n            v.what_happened\n              ? `<p><strong>What happened:</strong> ${esc(v.what_happened)}</p>`\n              : ''\n          }\n\n          ${\n            v.who_is_affected\n              ? `<p><strong>Who is affected:</strong> ${esc(v.who_is_affected)}</p>`\n              : ''\n          }\n\n          ${\n            v.why_it_matters\n              ? `<p><strong>Why it matters:</strong> ${esc(v.why_it_matters)}</p>`\n              : ''\n          }\n\n          ${\n            v.recommended_action\n              ? `<p><strong>Recommended action:</strong> ${esc(v.recommended_action)}</p>`\n              : ''\n          }\n\n          ${\n            v.url\n              ? `<p><a href=\"${esc(v.url)}\">Source →</a></p>`\n              : ''\n          }\n        </article>\n      `;\n    }).join('')\n  : '<p class=\"empty\">No significant vulnerabilities identified.</p>';\n\n// Create the landscape table data.\nconst landscapeRows = landscape.length\n  ? landscape.map(item => `\n      <tr>\n        <td>${esc(item.topic)}</td>\n        <td>${esc(item.count)}</td>\n        <td>${esc(item.percentage ?? '')}${item.percentage !== undefined ? '%' : ''}</td>\n      </tr>\n    `).join('')\n  : `\n      <tr>\n        <td colspan=\"3\">No landscape data available.</td>\n      </tr>\n    `;\n\n// Create the landscape pie chart using CSS conic-gradient.\nconst landscapePie = landscape.length\n  ? (() => {\n      let current = 0;\n\n      const colors = [\n        '#2563eb',\n        '#dc2626',\n        '#16a34a',\n        '#f59e0b',\n        '#7c3aed',\n        '#0891b2',\n        '#db2777',\n        '#64748b',\n        '#ea580c',\n        '#059669',\n        '#4f46e5',\n        '#9333ea',\n        '#475569'\n      ];\n\n      const segments = landscape\n        .map((item, index) => {\n          const percentage = Number(item.percentage ?? 0);\n\n          const start = current;\n          const end = current + percentage;\n\n          current = end;\n\n          return `${colors[index % colors.length]} ${start}% ${end}%`;\n        })\n        .join(', ');\n\n      const legend = landscape.map((item, index) => `\n        <div class=\"legend-item\">\n          <span\n            class=\"legend-color\"\n            style=\"background:${colors[index % colors.length]}\"\n          ></span>\n          <span>${esc(item.topic)}</span>\n          <strong>${esc(item.percentage ?? 0)}%</strong>\n        </div>\n      `).join('');\n\n      return `\n        <div class=\"chart-layout\">\n          <div\n            class=\"pie-chart\"\n            style=\"background: conic-gradient(${segments});\"\n          ></div>\n\n          <div class=\"legend\">\n            ${legend}\n          </div>\n        </div>\n      `;\n    })()\n  : '<p class=\"empty\">No landscape chart data available.</p>';\n\n// Build a reusable horizontal bar chart.\nconst barChart = (items, title, labelField = 'country') => {\n  if (!Array.isArray(items) || items.length === 0) {\n    return `\n      <div class=\"chart-card\">\n        <h2>${esc(title)}</h2>\n        <p class=\"empty\">No chart data available.</p>\n      </div>\n    `;\n  }\n\n  const values = items.map(item => Number(item.count ?? 0));\n  const max = Math.max(...values, 1);\n\n  return `\n    <div class=\"chart-card\">\n      <h2>${esc(title)}</h2>\n\n      ${items.map(item => {\n        const value = Number(item.count ?? 0);\n        const width = Math.max((value / max) * 100, 2);\n\n        return `\n          <div class=\"bar-row\">\n            <div class=\"bar-label\">\n              ${esc(item[labelField] ?? item.name ?? item.topic ?? '')}\n            </div>\n\n            <div class=\"bar-track\">\n              <div\n                class=\"bar-fill\"\n                style=\"width:${width}%\"\n              ></div>\n            </div>\n\n            <div class=\"bar-value\">\n              ${esc(value)}\n            </div>\n          </div>\n        `;\n      }).join('')}\n    </div>\n  `;\n};\n\nconst countryChartHtml = barChart(\n  countryBreakdown,\n  'Countries Most Affected by Reported Cyber Attacks',\n  'country'\n);\n\nconst ukSectorChartHtml = barChart(\n  ukSectorBreakdown,\n  'UK Sectors Most Affected by Reported Cyber Attacks',\n  'sector'\n);\n\n// Recommendations now include the reason behind each suggestion.\nconst recommendationList = (items) => {\n  if (!Array.isArray(items) || items.length === 0) {\n    return '<p class=\"empty\">No recommendations identified.</p>';\n  }\n\n  return items.map((item, index) => {\n    if (typeof item === 'string') {\n      return `<div class=\"recommendation-item\"><p>${esc(item)}</p></div>`;\n    }\n\n    return `\n      <div class=\"recommendation-item\">\n        <h3>${index + 1}. ${esc(item.title ?? item.name ?? 'Recommendation')}</h3>\n\n        ${\n          item.description\n            ? `<p>${esc(item.description)}</p>`\n            : ''\n        }\n\n        ${\n          item.why\n            ? `<p><strong>Why:</strong> ${esc(item.why)}</p>`\n            : ''\n        }\n\n        ${\n          item.reason\n            ? `<p><strong>Reason:</strong> ${esc(item.reason)}</p>`\n            : ''\n        }\n\n        ${\n          item.url\n            ? `<a href=\"${esc(item.url)}\">Open source →</a>`\n            : ''\n        }\n      </div>\n    `;\n  }).join('');\n};\n\nconst recommendationsHtml = `\n  <div class=\"recommendation\">\n    <h2>Recommended Reading</h2>\n    ${recommendationList(recommendations.recommended_reading)}\n  </div>\n\n  <div class=\"recommendation\">\n    <h2>Watch This</h2>\n    ${recommendationList(recommendations.watch_this)}\n  </div>\n\n  <div class=\"recommendation\">\n    <h2>Learn This</h2>\n    ${recommendationList(recommendations.learn_this)}\n  </div>\n`;\n\n// Render the China section only when the AI provides evidence for it.\nconst chinaHtml = chinaSection\n  ? `\n      <section class=\"section\" id=\"china-cybersecurity\">\n        <h1>China — Cybersecurity & Technology Developments</h1>\n\n        ${\n          chinaSection.summary\n            ? `<p>${esc(chinaSection.summary)}</p>`\n            : ''\n        }\n\n        ${\n          chinaSection.developments\n            ? listHtml(chinaSection.developments)\n            : ''\n        }\n\n        ${\n          chinaSection.why_it_matters\n            ? `\n              <div class=\"insight-box\">\n                <strong>Why it matters</strong>\n                <p>${esc(chinaSection.why_it_matters)}</p>\n              </div>\n            `\n            : ''\n        }\n\n        ${\n          chinaSection.url\n            ? `<p><a href=\"${esc(chinaSection.url)}\">Source →</a></p>`\n            : ''\n        }\n      </section>\n    `\n  : '';\n\nconst html = `\n<!DOCTYPE html>\n<html>\n<head>\n<meta charset=\"UTF-8\">\n\n<style>\n\n@page {\n  size: A4;\n  margin: 16mm 16mm 18mm 16mm;\n}\n\nbody {\n  font-family: Arial, sans-serif;\n  color: #172033;\n  line-height: 1.55;\n  font-size: 13px;\n  counter-reset: page;\n}\n\n.cover {\n  text-align: center;\n  padding-top: 90px;\n  page-break-after: always;\n}\n\n.cover h1 {\n  font-size: 34px;\n  margin-bottom: 12px;\n}\n\n.subtitle {\n  color: #667085;\n  font-size: 16px;\n}\n\nh1 {\n  font-size: 27px;\n  color: #172033;\n  margin-top: 0;\n}\n\nh2 {\n  font-size: 21px;\n  color: #1d4ed8;\n  border-bottom: 2px solid #dbe3f0;\n  padding-bottom: 7px;\n}\n\nh3 {\n  color: #253858;\n}\n\n.section {\n  page-break-before: always;\n}\n\n.toc {\n  page-break-after: always;\n}\n\n.toc-item {\n  padding: 7px 0;\n  border-bottom: 1px dotted #cbd5e1;\n}\n\n.toc-item a {\n  color: #172033;\n}\n\n.top-story {\n  display: flex;\n  gap: 16px;\n  padding: 16px 0;\n  border-bottom: 1px solid #e5e7eb;\n  page-break-inside: avoid;\n}\n\n.rank {\n  font-size: 28px;\n  font-weight: bold;\n  color: #2563eb;\n  min-width: 35px;\n}\n\n.story-content {\n  flex: 1;\n}\n\n.badge-row {\n  margin: 8px 0;\n}\n\n.badge,\n.score {\n  display: inline-block;\n  padding: 4px 8px;\n  margin-right: 6px;\n  border-radius: 5px;\n  background: #eef2ff;\n  font-size: 11px;\n}\n\n.badge.impact {\n  background: #fef3c7;\n}\n\n.score {\n  background: #ecfdf3;\n}\n\n.meta {\n  color: #667085;\n  font-size: 12px;\n}\n\n.card {\n  padding: 13px;\n  margin: 12px 0;\n  border: 1px solid #e2e8f0;\n  border-radius: 7px;\n  page-break-inside: avoid;\n}\n\n.insight-box {\n  padding: 13px;\n  margin: 12px 0;\n  border-left: 4px solid #2563eb;\n  background: #eff6ff;\n}\n\n.vulnerability {\n  padding: 16px;\n  margin: 15px 0;\n  border-left: 5px solid #dc2626;\n  background: #f8fafc;\n  page-break-inside: avoid;\n}\n\n.vuln-header {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n}\n\n.vuln-number {\n  font-size: 20px;\n  font-weight: bold;\n  color: #dc2626;\n}\n\n.severity {\n  margin-left: auto;\n  padding: 4px 9px;\n  border-radius: 5px;\n  font-weight: bold;\n  font-size: 11px;\n  background: #e5e7eb;\n}\n\n.severity.critical {\n  background: #7f1d1d;\n  color: white;\n}\n\n.severity.high {\n  background: #dc2626;\n  color: white;\n}\n\n.severity.medium {\n  background: #f59e0b;\n  color: white;\n}\n\n.severity.low {\n  background: #16a34a;\n  color: white;\n}\n\n.description-box {\n  padding: 12px;\n  margin: 12px 0;\n  background: #fff7ed;\n  border-left: 4px solid #f97316;\n}\n\ntable {\n  width: 100%;\n  border-collapse: collapse;\n  margin-top: 15px;\n}\n\nth,\ntd {\n  border-bottom: 1px solid #dbe3f0;\n  padding: 9px;\n  text-align: left;\n}\n\nth {\n  background: #eff6ff;\n}\n\n.chart-layout {\n  display: flex;\n  gap: 30px;\n  align-items: center;\n  margin: 20px 0 30px;\n  page-break-inside: avoid;\n}\n\n.pie-chart {\n  width: 210px;\n  height: 210px;\n  border-radius: 50%;\n  flex-shrink: 0;\n}\n\n.legend {\n  flex: 1;\n}\n\n.legend-item {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  margin: 7px 0;\n}\n\n.legend-color {\n  width: 13px;\n  height: 13px;\n  border-radius: 3px;\n  display: inline-block;\n}\n\n.legend-item strong {\n  margin-left: auto;\n}\n\n.chart-card {\n  padding: 18px;\n  margin: 18px 0;\n  border: 1px solid #dbe3f0;\n  border-radius: 8px;\n  page-break-inside: avoid;\n}\n\n.bar-row {\n  display: grid;\n  grid-template-columns: 150px 1fr 35px;\n  gap: 10px;\n  align-items: center;\n  margin: 10px 0;\n}\n\n.bar-label {\n  font-size: 12px;\n}\n\n.bar-track {\n  height: 16px;\n  background: #e5e7eb;\n  border-radius: 5px;\n  overflow: hidden;\n}\n\n.bar-fill {\n  height: 100%;\n  background: #2563eb;\n  border-radius: 5px;\n}\n\n.bar-value {\n  text-align: right;\n  font-weight: bold;\n}\n\n.recommendation {\n  padding: 15px;\n  margin: 12px 0;\n  border: 1px solid #dbe3f0;\n  border-radius: 7px;\n  page-break-inside: avoid;\n}\n\n.recommendation-item {\n  padding: 10px 0;\n  border-bottom: 1px solid #eef2f6;\n}\n\n.empty {\n  color: #98a2b3;\n  font-style: italic;\n}\n\na {\n  color: #2563eb;\n  text-decoration: none;\n}\n\n.footer {\n  margin-top: 30px;\n  padding-top: 10px;\n  border-top: 1px solid #e5e7eb;\n  color: #667085;\n  font-size: 10px;\n}\n\n@media print {\n  .footer::after {\n    content: \"  |  Page \" counter(page);\n  }\n}\n\n</style>\n</head>\n\n<body>\n\n<div class=\"cover\">\n  <h1>Cybersecurity Intelligence Report</h1>\n\n  <p class=\"subtitle\">\n    Weekly Cybersecurity Intelligence & Analysis\n  </p>\n\n  <p>\n    ${formatDateText(data.reporting_period)}\n  </p>\n\n  <p>\n    Generated: ${esc(generatedAt)}\n  </p>\n</div>\n\n<section class=\"toc\">\n  <h1>Table of Contents</h1>\n\n  <div class=\"toc-item\">\n    <a href=\"#executive-summary\">01 — Executive Summary</a>\n  </div>\n\n  <div class=\"toc-item\">\n    <a href=\"#top-stories\">02 — Top 5 Stories</a>\n  </div>\n\n  <div class=\"toc-item\">\n    <a href=\"#landscape\">03 — Cybersecurity Landscape</a>\n  </div>\n\n  <div class=\"toc-item\">\n    <a href=\"#vulnerability-watch\">04 — Vulnerability Watch</a>\n  </div>\n\n  <div class=\"toc-item\">\n    <a href=\"#threats-attacks\">05 — Threat Activity</a>\n  </div>\n\n  <div class=\"toc-item\">\n    <a href=\"#security-research\">06 — Security Research</a>\n  </div>\n\n  <div class=\"toc-item\">\n    <a href=\"#major-developments\">07 — Major Developments</a>\n  </div>\n\n  <div class=\"toc-item\">\n    <a href=\"#emerging-trends\">08 — Emerging Trends</a>\n  </div>\n\n  <div class=\"toc-item\">\n    <a href=\"#recommendations\">09 — Recommendations</a>\n  </div>\n\n  ${\n    chinaSection\n      ? `\n        <div class=\"toc-item\">\n          <a href=\"#china-cybersecurity\">\n            10 — China: Cybersecurity & Technology\n          </a>\n        </div>\n      `\n      : ''\n  }\n</section>\n\n<section class=\"section\" id=\"executive-summary\">\n  <h1>Executive Summary</h1>\n  <p>${esc(data.executive_summary)}</p>\n</section>\n\n<section class=\"section\" id=\"top-stories\">\n  <h1>Top 5 Cybersecurity Stories</h1>\n  ${top5Html}\n</section>\n\n<section class=\"section\" id=\"landscape\">\n  <h1>Cybersecurity Landscape</h1>\n\n  ${landscapePie}\n\n  <table>\n    <thead>\n      <tr>\n        <th>Topic</th>\n        <th>Stories</th>\n        <th>Share</th>\n      </tr>\n    </thead>\n\n    <tbody>\n      ${landscapeRows}\n    </tbody>\n  </table>\n</section>\n\n<section class=\"section\">\n  <h1>Attack Geography</h1>\n\n  <p>\n    This section highlights where the reported cyber incidents were\n    concentrated during the reporting period.\n  </p>\n\n  ${countryChartHtml}\n\n  ${ukSectorChartHtml}\n</section>\n\n<section class=\"section\" id=\"vulnerability-watch\">\n  <h1>Vulnerability Watch</h1>\n\n  <p>\n    The seven most important vulnerabilities identified during the reporting\n    period.\n  </p>\n\n  ${vulnerabilityHtml}\n</section>\n\n<section class=\"section\" id=\"threats-attacks\">\n  <h1>Threat Activity</h1>\n\n  <p>\n    This section focuses on what attackers and threat actors are doing,\n    including campaigns, exploitation activity, malware, ransomware,\n    phishing and other active attack patterns.\n  </p>\n\n  ${listHtml(threats)}\n</section>\n\n<section class=\"section\" id=\"security-research\">\n  <h1>Security Research</h1>\n  ${listHtml(research)}\n</section>\n\n<section class=\"section\" id=\"major-developments\">\n  <h1>Major Developments</h1>\n  ${listHtml(developments)}\n</section>\n\n<section class=\"section\" id=\"emerging-trends\">\n  <h1>Emerging Trends</h1>\n  ${listHtml(trends)}\n</section>\n\n<section class=\"section\" id=\"recommendations\">\n  <h1>Recommendations</h1>\n  ${recommendationsHtml}\n</section>\n\n${chinaHtml}\n\n<div class=\"footer\">\n  Cybersecurity Intelligence Report — Generated automatically from analyzed\n  cybersecurity sources.\n</div>\n\n</body>\n</html>\n`;\n\nreturn [{\n  json: {\n    html\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2864,
+        -1856
+      ],
+      "id": "768d8cdb-2701-4ad4-9a4b-85473a292a61",
+      "name": "Build Cybersecurity HTML"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\n\nconst learning = data.report ?? {};\n\nconst topics = Array.isArray(data.learning_topics)\n  ? data.learning_topics\n  : [];\n\nconst terminalLessons =\n  Array.isArray(data.terminal_lessons)\n    ? data.terminal_lessons\n    : Array.isArray(learning.terminal_lessons)\n      ? learning.terminal_lessons\n      : [];\n\nconst kaliTools =\n  Array.isArray(data.kali_tools)\n    ? data.kali_tools\n    : Array.isArray(learning.kali_tools)\n      ? learning.kali_tools\n      : [];\n\nconst vocabulary =\n  Array.isArray(data.cybersecurity_vocabulary)\n    ? data.cybersecurity_vocabulary\n    : Array.isArray(learning.cybersecurity_vocabulary)\n      ? learning.cybersecurity_vocabulary\n      : [];\n\nconst linuxLab =\n  data.linux_security_lab ??\n  learning.linux_security_lab ??\n  null;\n\nconst coding =\n  data.coding_for_cybersecurity ??\n  learning.coding_for_cybersecurity ??\n  null;\n\nconst reportWriting =\n  data.cybersecurity_report_writing ??\n  learning.cybersecurity_report_writing ??\n  null;\n\nconst networking =\n  data.networking_packet_tracer ??\n  learning.networking_packet_tracer ??\n  null;\n\nconst cloud =\n  data.cloud_security ??\n  learning.cloud_security ??\n  null;\n\nconst career =\n  data.career_practical_skills ??\n  learning.career_practical_skills ??\n  null;\n\nconst technologySpotlight =\n  data.cybersecurity_technology_spotlight ??\n  learning.cybersecurity_technology_spotlight ??\n  null;\n\nconst esc = (value) =>\n  String(value ?? '')\n    .replace(/&/g, '&amp;')\n    .replace(/</g, '&lt;')\n    .replace(/>/g, '&gt;')\n    .replace(/\"/g, '&quot;')\n    .replace(/'/g, '&#39;');\n\n// Keep the learning report date and time readable for a student.\nconst generatedAt = new Intl.DateTimeFormat('en-GB', {\n  day: 'numeric',\n  month: 'long',\n  year: 'numeric',\n  hour: 'numeric',\n  minute: '2-digit',\n  hour12: true\n}).format(new Date());\n\nconst formatDateText = (value) => {\n  if (!value) return '';\n\n  const text = String(value);\n\n  const match = text.match(/^(\\d{4})-(\\d{2})-(\\d{2})$/);\n\n  if (match) {\n    const date = new Date(\n      Number(match[1]),\n      Number(match[2]) - 1,\n      Number(match[3])\n    );\n\n    return new Intl.DateTimeFormat('en-GB', {\n      day: 'numeric',\n      month: 'long',\n      year: 'numeric'\n    }).format(date);\n  }\n\n  return esc(value);\n};\n\n// Render the main learning topics with an extra beginner-friendly explanation.\nconst topicsHtml = topics.length\n  ? topics.map((topic, index) => `\n      <article class=\"learning-topic\" id=\"learning-topic-${index + 1}\">\n\n        <div class=\"topic-header\">\n          <span class=\"number\">${index + 1}</span>\n\n          <div>\n            <h2>${esc(topic.topic ?? topic.concept ?? 'Learning Topic')}</h2>\n\n            ${\n              topic.difficulty\n                ? `<span class=\"difficulty\">${esc(topic.difficulty)}</span>`\n                : ''\n            }\n          </div>\n        </div>\n\n        ${\n          topic.beginner_explanation\n            ? `\n              <div class=\"beginner-box\">\n                <h3>Beginner Explanation</h3>\n                <p>${esc(topic.beginner_explanation)}</p>\n              </div>\n            `\n            : ''\n        }\n\n        ${\n          topic.concept\n            ? `\n              <h3>Concept</h3>\n              <p>${esc(topic.concept)}</p>\n            `\n            : ''\n        }\n\n        ${\n          topic.technical_terms\n            ? `\n              <h3>Technical Terms</h3>\n              <p>${esc(topic.technical_terms)}</p>\n            `\n            : ''\n        }\n\n        ${\n          topic.why_to_learn\n            ? `\n              <h3>Why Learn This?</h3>\n              <p>${esc(topic.why_to_learn)}</p>\n            `\n            : ''\n        }\n\n        ${\n          topic.connection_to_this_weeks_news\n            ? `\n              <h3>Connection to This Week's News</h3>\n              <p>${esc(topic.connection_to_this_weeks_news)}</p>\n            `\n            : ''\n        }\n\n        ${\n          topic.what_to_study\n            ? `\n              <h3>What to Study</h3>\n              <p>${esc(topic.what_to_study)}</p>\n            `\n            : ''\n        }\n\n        ${\n          topic.kali_linux_connection\n            ? `\n              <div class=\"kali-box\">\n                <h3>Kali Linux Connection</h3>\n                <p>${esc(topic.kali_linux_connection)}</p>\n              </div>\n            `\n            : ''\n        }\n\n        ${\n          topic.tools_to_explore\n            ? `\n              <h3>Tools to Explore</h3>\n              <p>${esc(topic.tools_to_explore)}</p>\n            `\n            : ''\n        }\n\n        ${\n          topic.practical_exercise\n            ? `\n              <div class=\"exercise\">\n                <h3>Practical Exercise</h3>\n\n                <p>${esc(topic.practical_exercise)}</p>\n\n                <small>\n                  Only perform this in a local VM, CTF, or intentionally\n                  vulnerable lab that you are authorized to use.\n                </small>\n              </div>\n            `\n            : ''\n        }\n\n        ${\n          topic.next_step\n            ? `\n              <div class=\"next-step\">\n                <h3>Next Step</h3>\n                <p>${esc(topic.next_step)}</p>\n              </div>\n            `\n            : ''\n        }\n\n      </article>\n    `).join('')\n  : `\n      <p class=\"empty\">\n        No learning topics were identified this week.\n      </p>\n    `;\n\n// Render terminal lessons. Three should be general Linux commands,\n// with an optional fourth lesson dedicated to Kali/security.\nconst terminalHtml = terminalLessons.length\n  ? terminalLessons.map((lesson, index) => `\n      <article class=\"terminal-card\">\n        <h3>${index + 1}. ${esc(lesson.command ?? lesson.title ?? 'Terminal Lesson')}</h3>\n\n        ${\n          lesson.platform\n            ? `<p><strong>Platform:</strong> ${esc(lesson.platform)}</p>`\n            : ''\n        }\n\n        ${\n          lesson.what_is_it\n            ? `<p><strong>What is it?</strong> ${esc(lesson.what_is_it)}</p>`\n            : ''\n        }\n\n        ${\n          lesson.why_learn\n            ? `<p><strong>Why learn it?</strong> ${esc(lesson.why_learn)}</p>`\n            : ''\n        }\n\n        ${\n          lesson.cybersecurity_connection\n            ? `<p><strong>Cybersecurity connection:</strong> ${esc(lesson.cybersecurity_connection)}</p>`\n            : ''\n        }\n\n        ${\n          lesson.try_it\n            ? `\n              <div class=\"try-box\">\n                <strong>Try it</strong>\n                <pre>${esc(lesson.try_it)}</pre>\n              </div>\n            `\n            : ''\n        }\n      </article>\n    `).join('')\n  : '<p class=\"empty\">No terminal lessons identified.</p>';\n\n// Render Kali tools as focused weekly tool studies.\nconst kaliToolsHtml = kaliTools.length\n  ? kaliTools.map((tool, index) => `\n      <article class=\"tool-card\">\n        <h3>${index + 1}. ${esc(tool.name ?? 'Kali Linux Tool')}</h3>\n\n        ${\n          tool.category\n            ? `<p><strong>Category:</strong> ${esc(tool.category)}</p>`\n            : ''\n        }\n\n        ${\n          tool.what_is_it\n            ? `<p><strong>What is it?</strong> ${esc(tool.what_is_it)}</p>`\n            : ''\n        }\n\n        ${\n          tool.what_it_does\n            ? `<p><strong>What does it do?</strong> ${esc(tool.what_it_does)}</p>`\n            : ''\n        }\n\n        ${\n          tool.why_it_is_useful\n            ? `<p><strong>Why is it useful?</strong> ${esc(tool.why_it_is_useful)}</p>`\n            : ''\n        }\n\n        ${\n          tool.who_uses_it\n            ? `<p><strong>Who uses it?</strong> ${esc(tool.who_uses_it)}</p>`\n            : ''\n        }\n\n        ${\n          tool.safe_exercise\n            ? `\n              <div class=\"exercise\">\n                <h3>Safe Exercise</h3>\n                <p>${esc(tool.safe_exercise)}</p>\n              </div>\n            `\n            : ''\n        }\n      </article>\n    `).join('')\n  : '<p class=\"empty\">No Kali Linux tools identified this week.</p>';\n\n// Render the vocabulary table in English only.\nconst vocabularyHtml = vocabulary.length\n  ? `\n      <table class=\"vocabulary-table\">\n        <thead>\n          <tr>\n            <th>Term</th>\n            <th>Simple Meaning</th>\n            <th>Cybersecurity Meaning</th>\n            <th>Example</th>\n          </tr>\n        </thead>\n\n        <tbody>\n          ${vocabulary.slice(0, 5).map(item => `\n            <tr>\n              <td><strong>${esc(item.term)}</strong></td>\n              <td>${esc(item.simple_meaning)}</td>\n              <td>${esc(item.cybersecurity_meaning)}</td>\n              <td>${esc(item.example)}</td>\n            </tr>\n          `).join('')}\n        </tbody>\n      </table>\n    `\n  : '<p class=\"empty\">No new vocabulary identified this week.</p>';\n\n// Render the weekly Linux lab.\nconst linuxLabHtml = linuxLab\n  ? `\n      <article class=\"feature-card\">\n        ${\n          linuxLab.title\n            ? `<h2>${esc(linuxLab.title)}</h2>`\n            : '<h2>Linux & Security Lab</h2>'\n        }\n\n        ${\n          linuxLab.platform\n            ? `<p><strong>Platform:</strong> ${esc(linuxLab.platform)}</p>`\n            : ''\n        }\n\n        ${\n          linuxLab.concept\n            ? `<h3>Concept</h3><p>${esc(linuxLab.concept)}</p>`\n            : ''\n        }\n\n        ${\n          linuxLab.explanation\n            ? `<h3>Beginner Explanation</h3><p>${esc(linuxLab.explanation)}</p>`\n            : ''\n        }\n\n        ${\n          linuxLab.practical_task\n            ? `<h3>Practical Task</h3><p>${esc(linuxLab.practical_task)}</p>`\n            : ''\n        }\n\n        ${\n          linuxLab.kali_specific\n            ? `<h3>Kali Linux</h3><p>${esc(linuxLab.kali_specific)}</p>`\n            : ''\n        }\n      </article>\n    `\n  : '';\n\n// Render the coding comparison section.\nconst codingHtml = coding\n  ? `\n      <article class=\"feature-card\">\n        <h2>${esc(coding.title ?? 'Coding for Cybersecurity')}</h2>\n\n        ${\n          coding.topic\n            ? `<p><strong>Weekly topic:</strong> ${esc(coding.topic)}</p>`\n            : ''\n        }\n\n        ${\n          coding.explanation\n            ? `<p>${esc(coding.explanation)}</p>`\n            : ''\n        }\n\n        ${\n          coding.python\n            ? `\n              <h3>Python</h3>\n              <pre class=\"code\">${esc(coding.python)}</pre>\n            `\n            : ''\n        }\n\n        ${\n          coding.javascript\n            ? `\n              <h3>JavaScript</h3>\n              <pre class=\"code\">${esc(coding.javascript)}</pre>\n            `\n            : ''\n        }\n\n        ${\n          coding.csharp\n            ? `\n              <h3>C#</h3>\n              <pre class=\"code\">${esc(coding.csharp)}</pre>\n            `\n            : ''\n        }\n\n        ${\n          coding.language_comparison\n            ? `<h3>When Would You Use Each?</h3><p>${esc(coding.language_comparison)}</p>`\n            : ''\n        }\n      </article>\n    `\n  : '';\n\n// Render the cybersecurity report-writing learning section.\nconst reportWritingHtml = reportWriting\n  ? `\n      <article class=\"feature-card\">\n        <h2>Writing Cybersecurity Reports</h2>\n\n        ${\n          reportWriting.term\n            ? `<p><strong>Term:</strong> ${esc(reportWriting.term)}</p>`\n            : ''\n        }\n\n        ${\n          reportWriting.rule\n            ? `<p><strong>Writing rule:</strong> ${esc(reportWriting.rule)}</p>`\n            : ''\n        }\n\n        ${\n          reportWriting.small_example\n            ? `\n              <h3>Small Example</h3>\n              <p>${esc(reportWriting.small_example)}</p>\n            `\n            : ''\n        }\n\n        ${\n          reportWriting.professional_report\n            ? `\n              <h3>Professional Report Example</h3>\n              <p>${esc(reportWriting.professional_report)}</p>\n            `\n            : ''\n        }\n\n        ${\n          reportWriting.source_url\n            ? `\n              <p>\n                <a href=\"${esc(reportWriting.source_url)}\">\n                  Open the professional report example →\n                </a>\n              </p>\n            `\n            : ''\n        }\n\n        ${\n          reportWriting.student_vs_professional\n            ? `\n              <h3>Student Assignment vs Professional Report</h3>\n              <p>${esc(reportWriting.student_vs_professional)}</p>\n            `\n            : ''\n        }\n      </article>\n    `\n  : '';\n\n// Render one weekly networking lesson.\nconst networkingHtml = networking\n  ? `\n      <article class=\"feature-card\">\n        <h2>Networking & Cisco Packet Tracer</h2>\n\n        ${\n          networking.concept\n            ? `<h3>Concept</h3><p>${esc(networking.concept)}</p>`\n            : ''\n        }\n\n        ${\n          networking.beginner_explanation\n            ? `<h3>Beginner Explanation</h3><p>${esc(networking.beginner_explanation)}</p>`\n            : ''\n        }\n\n        ${\n          networking.theory\n            ? `<h3>Theory</h3><p>${esc(networking.theory)}</p>`\n            : ''\n        }\n\n        ${\n          networking.packet_tracer_task\n            ? `<h3>Packet Tracer Task</h3><p>${esc(networking.packet_tracer_task)}</p>`\n            : ''\n        }\n\n        ${\n          networking.why_it_matters\n            ? `<h3>Why It Matters</h3><p>${esc(networking.why_it_matters)}</p>`\n            : ''\n        }\n\n        ${\n          networking.cybersecurity_connection\n            ? `<h3>Cybersecurity Connection</h3><p>${esc(networking.cybersecurity_connection)}</p>`\n            : ''\n        }\n      </article>\n    `\n  : '';\n\n// Render one beginner cloud-security lesson.\nconst cloudHtml = cloud\n  ? `\n      <article class=\"feature-card\">\n        <h2>Cloud Security</h2>\n\n        ${\n          cloud.concept\n            ? `<h3>This Week's Concept</h3><p>${esc(cloud.concept)}</p>`\n            : ''\n        }\n\n        ${\n          cloud.beginner_explanation\n            ? `<h3>Beginner Explanation</h3><p>${esc(cloud.beginner_explanation)}</p>`\n            : ''\n        }\n\n        ${\n          cloud.theory\n            ? `<h3>Theory</h3><p>${esc(cloud.theory)}</p>`\n            : ''\n        }\n\n        ${\n          cloud.practical_task\n            ? `<h3>Practical Task</h3><p>${esc(cloud.practical_task)}</p>`\n            : ''\n        }\n\n        ${\n          cloud.news_connection\n            ? `<h3>Connection to This Week's News</h3><p>${esc(cloud.news_connection)}</p>`\n            : ''\n        }\n      </article>\n    `\n  : '';\n\n// Render career exploration and practical skill development.\nconst careerHtml = career\n  ? `\n      <article class=\"feature-card\">\n        <h2>Career & Practical Skills</h2>\n\n        ${\n          career.skills_from_this_weeks_news\n            ? `\n              <h3>Skills Revealed by This Week's News</h3>\n              <p>${esc(career.skills_from_this_weeks_news)}</p>\n            `\n            : ''\n        }\n\n        ${\n          career.role\n            ? `<h3>Cybersecurity Role: ${esc(career.role)}</h3>`\n            : ''\n        }\n\n        ${\n          career.role_overview\n            ? `<p>${esc(career.role_overview)}</p>`\n            : ''\n        }\n\n        ${\n          career.responsibilities\n            ? `<p><strong>Responsibilities:</strong> ${esc(career.responsibilities)}</p>`\n            : ''\n        }\n\n        ${\n          career.companies\n            ? `<p><strong>Where it is used:</strong> ${esc(career.companies)}</p>`\n            : ''\n        }\n\n        ${\n          career.skills_required\n            ? `<p><strong>Skills required:</strong> ${esc(career.skills_required)}</p>`\n            : ''\n        }\n\n        ${\n          career.uk_demand\n            ? `<p><strong>UK demand:</strong> ${esc(career.uk_demand)}</p>`\n            : ''\n        }\n\n        ${\n          career.remote_work\n            ? `<p><strong>Remote work:</strong> ${esc(career.remote_work)}</p>`\n            : ''\n        }\n\n        ${\n          career.news_connection\n            ? `<p><strong>Connection to this week's news:</strong> ${esc(career.news_connection)}</p>`\n            : ''\n        }\n      </article>\n    `\n  : '';\n\n// Render the weekly cybersecurity technology spotlight.\nconst technologySpotlightHtml = technologySpotlight\n  ? `\n      <article class=\"feature-card technology-spotlight\">\n        <h2>\n          ${esc(\n            technologySpotlight.title ??\n            'Cybersecurity Technology Spotlight'\n          )}\n        </h2>\n\n        ${\n          technologySpotlight.technology\n            ? `<h3>Technology</h3><p>${esc(technologySpotlight.technology)}</p>`\n            : ''\n        }\n\n        ${\n          technologySpotlight.explanation\n            ? `<h3>What Is It?</h3><p>${esc(technologySpotlight.explanation)}</p>`\n            : ''\n        }\n\n        ${\n          technologySpotlight.news_connection\n            ? `<h3>Why It Appeared This Week</h3><p>${esc(technologySpotlight.news_connection)}</p>`\n            : ''\n        }\n\n        <div class=\"pros-cons\">\n          ${\n            technologySpotlight.benefits\n              ? `\n                <div class=\"pro\">\n                  <h3>Benefits</h3>\n                  <p>${esc(technologySpotlight.benefits)}</p>\n                </div>\n              `\n              : ''\n          }\n\n          ${\n            technologySpotlight.risks\n              ? `\n                <div class=\"con\">\n                  <h3>Risks / Limitations</h3>\n                  <p>${esc(technologySpotlight.risks)}</p>\n                </div>\n              `\n              : ''\n          }\n        </div>\n\n        ${\n          technologySpotlight.what_to_learn\n            ? `\n              <h3>What Should a Student Learn?</h3>\n              <p>${esc(technologySpotlight.what_to_learn)}</p>\n            `\n            : ''\n        }\n\n        ${\n          technologySpotlight.source_url\n            ? `\n              <p>\n                <a href=\"${esc(technologySpotlight.source_url)}\">\n                  Read the source →\n                </a>\n              </p>\n            `\n            : ''\n        }\n      </article>\n    `\n  : '';\n\nconst html = `\n<!DOCTYPE html>\n<html>\n<head>\n<meta charset=\"UTF-8\">\n\n<style>\n\n@page {\n  size: A4;\n  margin: 16mm 16mm 18mm 16mm;\n}\n\nbody {\n  font-family: Arial, sans-serif;\n  color: #172033;\n  line-height: 1.6;\n  font-size: 13px;\n}\n\n.cover {\n  text-align: center;\n  padding-top: 85px;\n  page-break-after: always;\n}\n\n.cover h1 {\n  font-size: 34px;\n  margin-bottom: 12px;\n}\n\n.subtitle {\n  color: #667085;\n  font-size: 17px;\n}\n\nh1 {\n  font-size: 27px;\n}\n\nh2 {\n  font-size: 21px;\n  color: #1d4ed8;\n  border-bottom: 2px solid #dbe3f0;\n  padding-bottom: 7px;\n}\n\nh3 {\n  color: #253858;\n}\n\n.section {\n  page-break-before: always;\n}\n\n.toc {\n  page-break-after: always;\n}\n\n.toc-item {\n  padding: 8px 0;\n  border-bottom: 1px dotted #cbd5e1;\n}\n\n.toc-item a {\n  color: #172033;\n}\n\n.learning-topic {\n  padding: 20px;\n  margin: 20px 0;\n  border: 1px solid #dbe3f0;\n  border-radius: 9px;\n  page-break-inside: avoid;\n}\n\n.topic-header {\n  display: flex;\n  gap: 14px;\n  align-items: center;\n}\n\n.number {\n  font-size: 25px;\n  font-weight: bold;\n  color: #2563eb;\n  min-width: 32px;\n}\n\n.difficulty {\n  display: inline-block;\n  padding: 4px 9px;\n  border-radius: 5px;\n  background: #eef2ff;\n  font-size: 11px;\n}\n\n.beginner-box {\n  margin: 16px 0;\n  padding: 14px;\n  background: #eff6ff;\n  border-left: 5px solid #2563eb;\n}\n\n.kali-box {\n  margin: 16px 0;\n  padding: 14px;\n  background: #f5f3ff;\n  border-left: 5px solid #7c3aed;\n}\n\n.exercise {\n  margin: 16px 0;\n  padding: 14px;\n  background: #ecfdf3;\n  border-left: 5px solid #16a34a;\n}\n\n.next-step {\n  margin: 16px 0;\n  padding: 14px;\n  background: #fff7ed;\n  border-left: 5px solid #f97316;\n}\n\n.terminal-card,\n.tool-card,\n.feature-card {\n  padding: 17px;\n  margin: 15px 0;\n  border: 1px solid #dbe3f0;\n  border-radius: 8px;\n  page-break-inside: avoid;\n}\n\n.try-box {\n  margin-top: 12px;\n  padding: 12px;\n  background: #111827;\n  color: #f9fafb;\n  border-radius: 6px;\n}\n\n.try-box pre {\n  white-space: pre-wrap;\n  margin: 8px 0 0;\n}\n\n.code {\n  padding: 14px;\n  background: #111827;\n  color: #f9fafb;\n  border-radius: 7px;\n  white-space: pre-wrap;\n  font-family: monospace;\n  font-size: 11px;\n}\n\n.vocabulary-table {\n  width: 100%;\n  border-collapse: collapse;\n  margin-top: 15px;\n}\n\n.vocabulary-table th,\n.vocabulary-table td {\n  border-bottom: 1px solid #dbe3f0;\n  padding: 10px;\n  vertical-align: top;\n  text-align: left;\n}\n\n.vocabulary-table th {\n  background: #eff6ff;\n}\n\n.pros-cons {\n  display: flex;\n  gap: 14px;\n  margin-top: 15px;\n}\n\n.pro,\n.con {\n  flex: 1;\n  padding: 14px;\n  border-radius: 7px;\n}\n\n.pro {\n  background: #ecfdf3;\n  border-left: 5px solid #16a34a;\n}\n\n.con {\n  background: #fff1f2;\n  border-left: 5px solid #dc2626;\n}\n\n.empty {\n  color: #98a2b3;\n  font-style: italic;\n}\n\na {\n  color: #2563eb;\n  text-decoration: none;\n}\n\n.footer {\n  margin-top: 30px;\n  padding-top: 10px;\n  border-top: 1px solid #e5e7eb;\n  color: #667085;\n  font-size: 10px;\n}\n\n@media print {\n  .footer::after {\n    content: \"  |  Page \" counter(page);\n  }\n}\n\n</style>\n</head>\n\n<body>\n\n<div class=\"cover\">\n  <h1>Cybersecurity Learning Report</h1>\n\n  <p class=\"subtitle\">\n    Cybersecurity Weekly Learning Guide\n  </p>\n\n  <p>\n    ${formatDateText(data.reporting_period)}\n  </p>\n\n  <p>\n    Generated: ${esc(generatedAt)}\n  </p>\n</div>\n\n<section class=\"toc\">\n  <h1>Table of Contents</h1>\n\n  <div class=\"toc-item\">\n    <a href=\"#learning-summary\">01 — Learning Summary</a>\n  </div>\n\n  <div class=\"toc-item\">\n    <a href=\"#learning-topics\">02 — This Week's Learning Topics</a>\n  </div>\n\n  <div class=\"toc-item\">\n    <a href=\"#terminal\">03 — Linux Terminal Lab</a>\n  </div>\n\n  <div class=\"toc-item\">\n    <a href=\"#kali-tools\">04 — Kali Linux Tools</a>\n  </div>\n\n  <div class=\"toc-item\">\n    <a href=\"#vocabulary\">05 — Cybersecurity Vocabulary</a>\n  </div>\n\n  <div class=\"toc-item\">\n    <a href=\"#linux-lab\">06 — Linux & Security Lab</a>\n  </div>\n\n  <div class=\"toc-item\">\n    <a href=\"#coding\">07 — Coding for Cybersecurity</a>\n  </div>\n\n  <div class=\"toc-item\">\n    <a href=\"#report-writing\">08 — Writing Cybersecurity Reports</a>\n  </div>\n\n  <div class=\"toc-item\">\n    <a href=\"#networking\">09 — Networking & Cisco Packet Tracer</a>\n  </div>\n\n  <div class=\"toc-item\">\n    <a href=\"#cloud\">10 — Cloud Security</a>\n  </div>\n\n  <div class=\"toc-item\">\n    <a href=\"#career\">11 — Career & Practical Skills</a>\n  </div>\n\n  <div class=\"toc-item\">\n    <a href=\"#technology-spotlight\">12 — Cybersecurity Technology Spotlight</a>\n  </div>\n</section>\n\n<section class=\"section\" id=\"learning-summary\">\n  <h1>Learning Summary</h1>\n\n  <p>\n    ${esc(\n      learning.learning_summary ??\n      data.learning_summary ??\n      'This report converts this week’s cybersecurity news into practical learning topics.'\n    )}\n  </p>\n</section>\n\n<section class=\"section\" id=\"learning-topics\">\n  <h1>This Week's Learning Topics</h1>\n\n  ${topicsHtml}\n</section>\n\n<section class=\"section\" id=\"terminal\">\n  <h1>Linux Terminal Lab</h1>\n\n  <p>\n    This section focuses on beginner-friendly Linux commands and one\n    optional cybersecurity-focused Kali Linux lesson.\n  </p>\n\n  ${terminalHtml}\n</section>\n\n<section class=\"section\" id=\"kali-tools\">\n  <h1>Kali Linux Tools</h1>\n\n  <p>\n    Each week, focus on one or two Kali Linux tools and understand what\n    they do before attempting more advanced use.\n  </p>\n\n  ${kaliToolsHtml}\n</section>\n\n<section class=\"section\" id=\"vocabulary\">\n  <h1>Cybersecurity Vocabulary</h1>\n\n  <p>\n    Five new cybersecurity terms to improve technical English and\n    cybersecurity understanding.\n  </p>\n\n  ${vocabularyHtml}\n</section>\n\n<section class=\"section\" id=\"linux-lab\">\n  ${linuxLabHtml}\n</section>\n\n<section class=\"section\" id=\"coding\">\n  ${codingHtml}\n</section>\n\n<section class=\"section\" id=\"report-writing\">\n  ${reportWritingHtml}\n</section>\n\n<section class=\"section\" id=\"networking\">\n  ${networkingHtml}\n</section>\n\n<section class=\"section\" id=\"cloud\">\n  ${cloudHtml}\n</section>\n\n<section class=\"section\" id=\"career\">\n  ${careerHtml}\n</section>\n\n<section class=\"section\" id=\"technology-spotlight\">\n  ${technologySpotlightHtml}\n</section>\n\n<div class=\"footer\">\n  Cybersecurity Learning Report — Generated automatically from this week's\n  cybersecurity intelligence.\n</div>\n\n</body>\n</html>\n`;\n\nreturn [{\n  json: {\n    html\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2848,
+        -1632
+      ],
+      "id": "96a766ae-a586-43e2-8fcd-c7745315c3ff",
+      "name": "Build Learning HTML"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://pdf:3000/pdf",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "text/html",
+        "body": "={{ $json.html }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        3088,
+        -1856
+      ],
+      "id": "3de20115-57f5-4ed6-8952-43e74c0a8e95",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "operation": "sendDocument",
+        "chatId": "-1004348263086",
+        "binaryData": true,
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3312,
+        -1856
+      ],
+      "id": "03ff8e4a-8367-40a5-8158-9633ecb18c87",
+      "name": "Send a document2",
+      "webhookId": "2db13fd1-0d6a-4d0f-91b7-e3bf6509bfe4",
+      "credentials": {
+        "telegramApi": {
+          "id": "rPlrTQhyYSxHx9dn",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendDocument",
+        "chatId": "-1004348263086",
+        "binaryData": true,
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3296,
+        -1632
+      ],
+      "id": "934c5203-ec0b-44c5-9d93-5f8e59f32a72",
+      "name": "Send a document (Learning PDF)",
+      "webhookId": "d63cf1d3-cfff-47b7-a41d-8a5698995691",
+      "credentials": {
+        "telegramApi": {
+          "id": "rPlrTQhyYSxHx9dn",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://pdf:3000/pdf",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "text/html",
+        "body": "={{ $json.html }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        3072,
+        -1632
+      ],
+      "id": "046f6e45-8449-4406-a90c-83b9b57e19d1",
+      "name": "HTTP Request (Learning PDF)"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        2000,
+        -1488
+      ],
+      "id": "90a811ab-b361-4286-93c2-8961360cc758",
+      "name": "Ollama Chat Model1",
+      "credentials": {
+        "ollamaApi": {
+          "id": "lrJp2V6AfYCSBBLZ",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"report_summary\": {\n    \"total_articles\": 0\n  },\n  \"articles\": []\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1024,
+        -880
+      ],
+      "id": "18758cfc-12e4-4dec-a6eb-3c9dccaa1786",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "model": "=qwen2.5:1.5b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        800,
+        -896
+      ],
+      "id": "656a7ef4-646b-4948-b423-91fa8a0097a8",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "lrJp2V6AfYCSBBLZ",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        1056,
+        -464
+      ],
+      "id": "26c8d09d-b313-43de-a492-ac1839ef0c93",
+      "name": "Google Gemini Chat Model2",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "grcCu5q24WjCAIKn",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "models/gemini-3-flash-preview"
+        },
+        "messages": {
+          "values": [
+            {}
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        1520,
+        -672
+      ],
+      "id": "869ab1e5-5a56-4207-bbda-484ed66673ea",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "85723D5zdyAKYQI8",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 60
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        592,
+        -1152
+      ],
+      "id": "4cb0dddf-d3e9-4506-b1b0-70b6ac90b48a",
+      "name": "Wait",
+      "webhookId": "63585710-c90c-4621-b479-bf3cccb9922e"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "RSS Read": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "RSS Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        [
+          {
+            "node": "Wait2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s)": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Insert row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert row": {
+      "main": [
+        []
+      ]
+    },
+    "HTML": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "Send a document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s)2": {
+      "main": [
+        [
+          {
+            "node": "Filter2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter2": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger2 (weekly vulnerability report)": {
+      "main": [
+        [
+          {
+            "node": "Get row(s)2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger (cybersecurity news)": {
+      "main": [
+        [
+          {
+            "node": "Get row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger3": {
+      "main": [
+        [
+          {
+            "node": "RSS Sources",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Read2": {
+      "main": [
+        [
+          {
+            "node": "Normalize News",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize News": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Duplicates": {
+      "main": [
+        [
+          {
+            "node": "Prepare AI Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Sources": {
+      "main": [
+        [
+          {
+            "node": "RSS Read2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare AI Input": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        []
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "Normalize News AI Report": {
+      "main": [
+        [
+          {
+            "node": "Parse AI Report JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse AI Report JSON": {
+      "main": [
+        [
+          {
+            "node": "Split Articles for Routing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Topic Analysis": {
+      "main": [
+        [
+          {
+            "node": "Prepare Chart Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Chart Data": {
+      "main": [
+        [
+          {
+            "node": "Topic Distribution Chart",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Topic Distribution Chart": {
+      "main": [
+        [
+          {
+            "node": "Merge Report Sections",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Top 5 Stories": {
+      "main": [
+        [
+          {
+            "node": "Merge Report Sections",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Prepare Articles": {
+      "main": [
+        [
+          {
+            "node": "Merge Report Sections",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Build Report Data": {
+      "main": [
+        [
+          {
+            "node": "Build PDF HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Report Sections": {
+      "main": [
+        [
+          {
+            "node": "Build Report Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build PDF HTML": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request (Generate PDF)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request (Generate PDF)": {
+      "main": [
+        [
+          {
+            "node": "Send a document1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Cybersecurity AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Topic Analysis",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Prepare Top 5 Stories",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Prepare Articles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Articles for Routing": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "AI Agent (General Report)": {
+      "main": [
+        [
+          {
+            "node": "Normalize News AI Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cybersecurity AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Parse Cybersecurity JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Cybersecurity JSON": {
+      "main": [
+        [
+          {
+            "node": "Build Cybersecurity Report Data",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Build Learning Report Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Cybersecurity Report Data": {
+      "main": [
+        [
+          {
+            "node": "Build Cybersecurity HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Learning Report Data": {
+      "main": [
+        [
+          {
+            "node": "Build Learning HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Cybersecurity HTML": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Send a document2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Learning HTML": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request (Learning PDF)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request (Learning PDF)": {
+      "main": [
+        [
+          {
+            "node": "Send a document (Learning PDF)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Cybersecurity AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        []
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent (General Report)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "AI Agent (General Report)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "timezone": "Europe/London",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "84963217-ed51-49e1-8494-9f16d88647a5",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a77c2b178644779aed3c4c8e77b529592ad28a3abe06d38c9f45becff23ee575"
+  },
+  "nodeGroups": [],
+  "id": "J8Cb8R3D2E4PWthV",
+  "tags": []
+}
