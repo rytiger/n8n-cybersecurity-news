@@ -3,14 +3,16 @@ A simple n8n workflow that collects cybersecurity news from different websites a
 
 ## Table of Contents
 -[How-It-Works](#how-it-works)
-Priority Classification
-News Sources
-Telegram Setup
-Before Running
-Using the Workflow for Other Topics
-Notes
+-[Priority-Classification](#priority-classification)
+-[News-Sources](#news-sources)
+-[Telegram-Setup](#telegram-setup)
+-[Before-Running](#before-running)
+-[Using-the-Workflow-for-Other-Topics](#using-the-Workflow-for-Other-topics)
+-[Notes](#notes)
 
-How It Works
+
+
+## How It Works
 Collects news from selected websites.
 Filters articles by date.
 Assigns a priority level based on keywords in the article title.
@@ -22,11 +24,15 @@ The workflow uses keywords in article titles to assign one of four priority leve
 🟡 Medium — Keywords related to security research.
 ⚪ Low — The default level when none of the configured keywords match.
 This classification is based on keywords, not AI analysis. It may not always reflect the actual severity or context of an article.
-News Sources
+
+
+## News Sources
 The repository includes RS Sources.csv, which contains the news sources and their URLs.
 You can edit the CSV file to add or remove websites. The sources don’t have to be cybersecurity-related; you can use the workflow for other topics too.
 After updating the CSV file, make sure the records in your n8n Data Table are updated as well. The Get Row(s) node uses this data to retrieve the sources.
-Telegram Setup
+
+
+## Telegram Setup
 1. Create a Telegram Bot
 Open Telegram and search for @BotFather (https://t.me/BotFather).
 Send /newbot and follow the instructions to choose a name and username.
@@ -57,13 +63,16 @@ For example:
 In this example, the channel chat ID is -1001234567890.
 Note: If the response is empty or doesn’t contain channel_post, check that your bot is an administrator and that a new channel post has been made. If a webhook is configured for the bot, getUpdates won’t work until the webhook is removed.
 Security: The URL contains your bot token. Don’t share it or include it in screenshots or GitHub files.
+
 4. Configure n8n
 Open the workflow in n8n.
 Open the Telegram node and create a Telegram API credential.
 Enter your bot token and save the credential.
 Set the Telegram chat ID to your channel’s chat ID.
 Test the workflow and confirm that a message arrives in your channel.
-Before Running
+
+
+## Before Running
 Check your credentials and node settings.
 Make sure the Telegram chat ID is correct.
 Check the Filter node and set a recent date, such as today or yesterday.
@@ -117,7 +126,7 @@ return {
 };
 
 
-Notes
+## Notes
 The workflow is intended to be customised.
 You can change the source websites, date filter and JavaScript code to suit your needs.
 Keep your bot token and other secrets private. Don’t upload them to GitHub.
