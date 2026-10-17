@@ -4,7 +4,7 @@ This project uses n8n to collect cybersecurity news from different websites and 
 ## Table of Contents
 
 -[Priority Classification](#priority-classification)  
--[Example Output](#example-output)  
+-[Example](#example)  
 -[News Sources](#news-sources)   
 -[Telegram Setup](#telegram-setup)   
 -[Using the Workflow for Other Topics](#using-the-workflow-for-other-topics)  
@@ -19,7 +19,7 @@ The workflow uses keywords in article titles to assign one of four priority leve
 ⚪ Low — The default level when none of the configured keywords match.  
 This classification is based on keywords, not AI analysis. It may not always reflect the actual severity or context of an article.  
 
-## Example Output
+## Example  
 <img width="400"  alt="example" src="https://github.com/user-attachments/assets/47b6a52e-3ca2-4979-9b82-8075fdf9697f" />
 
 
