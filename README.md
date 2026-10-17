@@ -5,7 +5,7 @@ This project uses n8n to collect cybersecurity news from different websites and 
 
 -[Priority Classification](#priority-classification)  
 -[Example Output](#example-output) 
--[News Sources](#news-sources)  
+-[News Sources](#news-sources)   
 -[Telegram Setup](#telegram-setup)  
 -[Before-Running](#before-running)  
 -[Using the Workflow for Other Topics](#using-the-workflow-for-other-topics)  
